@@ -1,5 +1,75 @@
+import * as nunjucks from 'nunjucks';
+
 // Custom template cache for compiled HTML
 const templateCache: Record<string, string> = {};
+
+// Configure Nunjucks environment
+let nunjucksEnv: nunjucks.Environment | null = null;
+
+function getNunjucksEnvironment(): nunjucks.Environment {
+  if (!nunjucksEnv) {
+    // Create a custom loader that fetches templates via HTTP
+    class HttpLoader {
+      async: boolean = false;
+      
+      getSource(name: string): nunjucks.LoaderSource {
+        // For browser environment, we'll use synchronous XMLHttpRequest
+        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const cacheBuster = isDevelopment ? `?t=${Date.now()}&r=${Math.random()}` : '';
+        
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `/src/${name}${cacheBuster}`, false); // Synchronous request
+        
+        if (isDevelopment) {
+          xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          xhr.setRequestHeader('Pragma', 'no-cache');
+          xhr.setRequestHeader('Expires', '0');
+        }
+        
+        try {
+          xhr.send();
+          
+          if (xhr.status !== 200) {
+            throw new Error(`Template not found: ${name} (status: ${xhr.status})`);
+          }
+          
+          return {
+            src: xhr.responseText,
+            path: name,
+            noCache: isDevelopment
+          };
+        } catch (error) {
+          console.error(`Failed to load template ${name}:`, error);
+          throw error;
+        }
+      }
+    }
+    
+    // Create Nunjucks environment with custom loader
+    nunjucksEnv = new nunjucks.Environment(new HttpLoader() as any, {
+      autoescape: true,
+      trimBlocks: true,
+      lstripBlocks: true
+    });
+    
+    // Add custom filters
+    nunjucksEnv.addFilter('urlencode', (str: string) => {
+      return encodeURIComponent(str || '');
+    });
+    
+    nunjucksEnv.addFilter('title', (str: string) => {
+      return (str || '').replace(/\w\S*/g, (txt) => 
+        txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+      );
+    });
+    
+    nunjucksEnv.addFilter('dump', (obj: any, indent: number = 2) => {
+      return JSON.stringify(obj, null, indent);
+    });
+  }
+  
+  return nunjucksEnv;
+}
 
 export class ViewEngine {
   /**
@@ -7,155 +77,30 @@ export class ViewEngine {
    */
   static clearCache(): void {
     Object.keys(templateCache).forEach(key => delete templateCache[key]);
+    // Reset the Nunjucks environment to clear its cache
+    nunjucksEnv = null;
   }
   /**
-   * Loads a template and compiles it to HTML at runtime
-   */
-  private static async loadAndCompileTemplate(viewPath: string, context: Record<string, any> = {}): Promise<string> {
-    // In development mode, disable caching completely for better HMR experience
-    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
-    // Always clear cache in development mode to ensure fresh templates
-    if (isDevelopment) {
-      this.clearCache();
-    }
-    
-    const cacheKey = `${viewPath}_${JSON.stringify(context)}`;
-    
-    if (!isDevelopment && templateCache[cacheKey]) {
-      return templateCache[cacheKey];
-    }
-
-    // Convert view path to template path served by Vite
-    const templatePath = viewPath.startsWith('/') ? viewPath.substring(1) : viewPath;
-    
-    // Add cache-busting in development mode
-    const cacheBuster = isDevelopment ? `?t=${Date.now()}&r=${Math.random()}` : '';
-    const fullUrl = `/src/${templatePath}${cacheBuster}`;
-
-    try {
-      // Fetch the .njk template file through Vite's dev server with cache busting
-      const response = await fetch(fullUrl, {
-        cache: isDevelopment ? 'no-cache' : 'default',
-        headers: isDevelopment ? {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        } : {}
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Template not found: ${templatePath} (status: ${response.status})`);
-      }
-
-      const templateContent = await response.text();
-      
-      // Compile the template at runtime
-      const compiledHtml = await this.compileTemplate(templateContent, context);
-      
-      // Cache the compiled HTML only in production
-      if (!isDevelopment) {
-        templateCache[cacheKey] = compiledHtml;
-      }
-      
-      return compiledHtml;
-    } catch (error) {
-      console.error(`Failed to load and compile template ${templatePath}:`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * Simple runtime template compilation
-   */
-  private static async compileTemplate(templateContent: string, context: Record<string, any> = {}): Promise<string> {
-    let result = templateContent;
-
-    // Handle template inheritance (extends)
-    const extendsMatch = result.match(/{% extends ["']([^"']+)["'] %}/);
-    if (extendsMatch) {
-      const baseTemplatePath = extendsMatch[1];
-      
-      try {
-        const baseTemplate = await this.loadBaseTemplate(baseTemplatePath);
-        
-        // Extract blocks from child template
-        const blockMatches = result.matchAll(/{% block (\w+) %}([\s\S]*?){% endblock %}/g);
-        const blocks: Record<string, string> = {};
-        
-        for (const match of blockMatches) {
-          blocks[match[1]] = match[2].trim();
-        }
-        
-        // Replace blocks in base template
-        result = baseTemplate;
-        for (const [blockName, blockContent] of Object.entries(blocks)) {
-          const blockRegex = new RegExp(`{% block ${blockName} %}[\\s\\S]*?{% endblock %}`, 'g');
-          result = result.replace(blockRegex, blockContent);
-        }
-      } catch (error) {
-        console.error(`Error loading base template: ${baseTemplatePath}`, error);
-        throw error;
-      }
-    }
-
-    // Remove any remaining Nunjucks syntax
-    result = result.replace(/{% extends [^%]+ %}/g, '');
-    result = result.replace(/{% block \w+ %}/g, '');
-    result = result.replace(/{% endblock %}/g, '');
-
-    // Replace variables
-    result = this.replaceVariables(result, context);
-
-    return result;
-  }
-
-  /**
-   * Load base template for inheritance
-   */
-  private static async loadBaseTemplate(templatePath: string): Promise<string> {
-    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const cacheBuster = isDevelopment ? `?t=${Date.now()}&r=${Math.random()}` : '';
-    
-    const response = await fetch(`/src/${templatePath}${cacheBuster}`, {
-      cache: isDevelopment ? 'no-cache' : 'default',
-      headers: isDevelopment ? {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      } : {}
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Base template not found: ${templatePath}`);
-    }
-    
-    const content = await response.text();
-    
-    return content;
-  }
-
-  /**
-   * Replace template variables with context values
-   */
-  private static replaceVariables(template: string, context: Record<string, any>): string {
-    let result = template;
-    
-    // Replace {{ variable }} patterns
-    const variableRegex = /\{\{\s*(\w+)\s*\}\}/g;
-    result = result.replace(variableRegex, (match, varName) => {
-      return context[varName] !== undefined ? String(context[varName]) : match;
-    });
-    
-    return result;
-  }
-
-  /**
-   * Renders a template with context by compiling it at runtime
+   * Renders a template with context using Nunjucks
    */
   private static async renderTemplate(viewPath: string, context: Record<string, any> = {}): Promise<string> {
     try {
-      return await this.loadAndCompileTemplate(viewPath, context);
+      const env = getNunjucksEnvironment();
+      
+      // Convert view path to template path
+      const templatePath = viewPath.startsWith('/') ? viewPath.substring(1) : viewPath;
+      
+      // Use Nunjucks to render the template
+      return new Promise((resolve, reject) => {
+        env.render(templatePath, context, (err, result) => {
+          if (err) {
+            console.error('Nunjucks rendering error:', err);
+            reject(err);
+          } else {
+            resolve(result || '');
+          }
+        });
+      });
     } catch (error) {
       console.error('Template rendering error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
