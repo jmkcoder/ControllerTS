@@ -1,6 +1,25 @@
 {
-  "name": "ts-mvc-frontend",
+  "name": "controllerts",
   "version": "1.0.0",
+  "description": "TypeScript MVC framework inspired by ASP.NET Core. Decorator-based routing, clean URLs, controller actions, and MVC attributes. Familiar .NET patterns for building modern web applications with TypeScript and HTML5 History API.",
+  "license": "MIT",
+  "author": "jmkcoder",
+  "homepage": "https://github.com/jmkcoder/ControllerTS",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jmkcoder/ControllerTS.git"
+  },
+  "keywords": [
+    "mvc",
+    "typescript",
+    "framework",
+    "controller",
+    "routing",
+    "decorators",
+    "asp.net",
+    "frontend",
+    "web-framework"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
