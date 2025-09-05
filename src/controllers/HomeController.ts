@@ -1,8 +1,10 @@
 import { Controller } from '../core/controller';
 import { route } from '../core/decorators';
 import { Injectable } from '../core/diDecorators';
+import { AutoRegister } from '../core/controllerDiscovery';
 import { UserService, LoggerService, EmailService } from '../services/exampleServices';
 
+@AutoRegister
 @Injectable
 export class HomeController extends Controller {
   private userService: UserService;

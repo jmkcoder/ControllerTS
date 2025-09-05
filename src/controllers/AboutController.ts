@@ -1,6 +1,8 @@
 import { Controller } from '../core/controller';
 import { route } from '../core/decorators';
+import { AutoRegister } from '../core/controllerDiscovery';
 
+@AutoRegister
 export class AboutController extends Controller {
   @route('about')
   @route('about/index')

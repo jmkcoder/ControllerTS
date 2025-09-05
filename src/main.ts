@@ -1,25 +1,26 @@
 import 'reflect-metadata'; // Required for dependency injection
-import { HomeController } from './controllers/HomeController';
-import { AboutController } from './controllers/AboutController';
 import { Router } from './core/router';
 import { ViewEngine } from './core/viewEngine';
-import { ControllerManager } from './core/controllerManager';
+import { ControllerDiscovery } from './core/controllerDiscovery';
 import { HtmlHelper } from './core/htmlHelper';
 import { Controller } from './core/controller';
 import { serviceContainer } from './core/serviceContainer';
 import { LoggerService, UserService, EmailService } from './services/exampleServices';
 import './style.css';
 
+// Import controllers to trigger @AutoRegister decorators
+import './controllers/HomeController';
+import './controllers/AboutController';
+
+// Register services in DI container
 serviceContainer.addSingleton(LoggerService);
 serviceContainer.addScoped(UserService);
 serviceContainer.addTransient(EmailService);
-
-// Register core services in DI container
 serviceContainer.addSingleton(ViewEngine);
 
-// Register controllers with the ControllerManager
-ControllerManager.registerController('Home', HomeController);
-ControllerManager.registerController('About', AboutController);
+// Import controllers above already triggered @AutoRegister decorators
+// Now initialize ControllerDiscovery and register all controllers
+ControllerDiscovery.registerAllControllers();
 
 // Initialize HtmlHelper for MVC attributes immediately
 HtmlHelper.initializeMvcAttributes();
@@ -32,13 +33,17 @@ const router = new Router();
 // Set router instance for controller redirects
 Controller.setRouter(router);
 
-// Register controllers with the router for controller/action routing
-router.registerController('Home', HomeController);
-router.registerController('About', AboutController);
-
-// Legacy route support (optional - decorators will handle most routing)
-router.addRoute('home', HomeController);
-router.addRoute('about', AboutController);
+// Register discovered controllers with the router as well
+const discoveredControllers = ControllerDiscovery.getControllers();
+for (const [name, controllerClass] of discoveredControllers) {
+    // Register with router if it has these methods
+    if (router.registerController) {
+        router.registerController(name, controllerClass);
+    }
+    if (router.addRoute) {
+        router.addRoute(name.toLowerCase(), controllerClass);
+    }
+}
 
 router.init();
 
