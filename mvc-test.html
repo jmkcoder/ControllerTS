@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVC Test</title>
+</head>
+<body>
+    <h1>MVC Attribute Test</h1>
+    
+    <button mvc-controller="Home" mvc-action="demoAction" style="padding: 10px; background: blue; color: white;">
+        Test MVC Button
+    </button>
+    
+    <div id="result"></div>
+    
+    <script type="module">
+        console.log('Test page loaded');
+        
+        // Import and initialize manually
+        import('./src/core/htmlHelper.js').then(module => {
+            console.log('HtmlHelper imported:', module);
+            module.HtmlHelper.initializeMvcAttributes();
+            
+            // Test click manually
+            setTimeout(() => {
+                const btn = document.querySelector('[mvc-controller]');
+                console.log('Found button:', btn);
+                if (btn) {
+                    console.log('Clicking button...');
+                    btn.click();
+                }
+            }, 1000);
+        }).catch(err => {
+            console.error('Import failed:', err);
+        });
+    </script>
+</body>
+</html>

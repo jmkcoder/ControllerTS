@@ -1,0 +1,63 @@
+{% extends "shared/_base.njk" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+  <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+    <h3>Navigation</h3>
+    <nav>
+      <a href="/" style="margin-right: 15px; padding: 8px 12px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">Home</a>
+      <a href="/about" style="margin-right: 15px; padding: 8px 12px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">About</a>
+      <a href="/home/demo" style="margin-right: 15px; padding: 8px 12px; background: #007bff; color: white; text-decoration: none; border-radius: 4px;">Demo Action</a>
+      <a href="/home/json" style="margin-right: 15px; padding: 8px 12px; background: #17a2b8; color: white; text-decoration: none; border-radius: 4px;">JSON Demo</a>
+    </nav>
+  </div>
+
+  <h1>{{ title }}</h1>
+  <p>{{ message }}</p>
+  
+  <div style="margin: 20px 0;">
+    <h2>Page Navigation</h2>
+    <nav style="margin-bottom: 20px;">
+      <a href="#details-section" style="margin-right: 10px; color: #007bff;">Jump to Details</a>
+      <a href="#features-section" style="margin-right: 10px; color: #007bff;">Jump to Features</a>
+    </nav>
+  </div>
+  
+  <div id="details-section" style="margin: 20px 0; padding: 15px; background: #e7f3ff; border-radius: 4px;">
+    <h3>Demo Action Details</h3>
+    <p><strong>Timestamp:</strong> {{ timestamp }}</p>
+    {% if data %}
+    <p><strong>Data received:</strong></p>
+    <pre style="background: #f1f1f1; padding: 10px; border-radius: 4px; overflow-x: auto;">{{ data | dump }}</pre>
+    {% endif %}
+  </div>
+
+  <div id="features-section" style="margin: 20px 0;">
+    <h3>Demo Features</h3>
+    <p>This page demonstrates:</p>
+    <ul>
+      <li>Clean URL routing (/home/demo)</li>
+      <li>Controller action with view rendering</li>
+      <li>Data passing from controller to view</li>
+      <li>Client-side navigation without page reload</li>
+      <li><strong>Normal hash behavior for page anchors</strong></li>
+    </ul>
+    
+    <div style="margin: 20px 0; padding: 15px; background: #d4edda; border-radius: 4px;">
+      <h4>Hash Behavior Examples</h4>
+      <p>Try these links to see how hashes work normally:</p>
+      <ul>
+        <li><a href="#details-section">Scroll to Details Section</a></li>
+        <li><a href="#features-section">Scroll to Features Section</a></li>
+        <li><a href="/home#demo-section">Go to Home page Demo Section</a></li>
+        <li><a href="/about#info-section">Go to About page Info Section</a></li>
+      </ul>
+      <p><em>Note: Hashes now work like normal HTML anchors, while clean URLs handle routing!</em></p>
+    </div>
+  </div>
+
+  <div style="margin: 20px 0;">
+    <a href="/" style="padding: 10px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">← Back to Home</a>
+  </div>
+{% endblock %}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirect Test</title>
+</head>
+<body>
+    <h1>Direct Redirect Test</h1>
+    
+    <button onclick="testDirectRedirect()">Test Direct Redirect to About</button>
+    <button onclick="testRouterRedirect()">Test Router Redirect to About</button>
+    
+    <script type="module">
+        window.testDirectRedirect = function() {
+            console.log('Testing direct redirect...');
+            window.history.pushState({}, '', '/about');
+            window.dispatchEvent(new PopStateEvent('popstate'));
+        };
+        
+        window.testRouterRedirect = function() {
+            console.log('Testing router redirect...');
+            // Assuming router is available globally
+            if (window.router && window.router.navigateTo) {
+                window.router.navigateTo('/about');
+            } else {
+                console.log('Router not available globally');
+                window.location.pathname = '/about';
+            }
+        };
+    </script>
+</body>
+</html>
