@@ -4,9 +4,24 @@ import { getRegisteredRoutes } from './decorators';
 export class Router {
   private routes: Record<string, any> = {};
   private registeredControllers: Map<string, typeof Controller> = new Map();
+  private currentQueryParams: URLSearchParams = new URLSearchParams();
 
   addRoute(path: string, controller: typeof Controller) {
     this.routes[path] = controller;
+  }
+
+  /**
+   * Get current query parameters
+   */
+  getQueryParams(): URLSearchParams {
+    return this.currentQueryParams;
+  }
+
+  /**
+   * Get a specific query parameter value
+   */
+  getQueryParam(name: string): string | null {
+    return this.currentQueryParams.get(name);
   }
 
   /**
@@ -27,6 +42,10 @@ export class Router {
 
   private async route() {
     const path = window.location.pathname.replace(/^\//, '') || 'home';
+    
+    // Parse query parameters
+    this.currentQueryParams = new URLSearchParams(window.location.search);
+    const queryParamsObject = Object.fromEntries(this.currentQueryParams.entries());
 
     // First, check decorator routes
     const decoratorRoutes = getRegisteredRoutes();
@@ -34,8 +53,19 @@ export class Router {
       const routeInfo = decoratorRoutes.get(path)!;
 
       const controller = new routeInfo.controller();
+      // Set query parameters on the controller
+      if (controller.setQueryParams) {
+        controller.setQueryParams(queryParamsObject, this.currentQueryParams);
+      }
+      
       if (typeof controller[routeInfo.action] === 'function') {
-        await controller[routeInfo.action]();
+        // Pass query parameters as the first argument if the action accepts parameters
+        const actionMethod = controller[routeInfo.action];
+        if (actionMethod.length > 0) {
+          await controller[routeInfo.action](queryParamsObject);
+        } else {
+          await controller[routeInfo.action]();
+        }
       } else {
         this.handle404();
       }
@@ -46,6 +76,10 @@ export class Router {
     const LegacyControllerClass = this.routes[path];
     if (LegacyControllerClass) {
       const controller = new LegacyControllerClass();
+      // Set query parameters on the controller
+      if (controller.setQueryParams) {
+        controller.setQueryParams(queryParamsObject, this.currentQueryParams);
+      }
       await controller.execute();
       return;
     }
@@ -59,10 +93,20 @@ export class Router {
       const RegisteredControllerClass = this.registeredControllers.get(controllerName);
       if (RegisteredControllerClass) {
         const controller = new RegisteredControllerClass();
+        // Set query parameters on the controller
+        if (controller.setQueryParams) {
+          controller.setQueryParams(queryParamsObject, this.currentQueryParams);
+        }
         
         // Check if the action exists on the controller
         if (typeof controller[actionName] === 'function') {
-          await controller[actionName]();
+          // Pass query parameters as the first argument if the action accepts parameters
+          const actionMethod = controller[actionName];
+          if (actionMethod.length > 0) {
+            await controller[actionName](queryParamsObject);
+          } else {
+            await controller[actionName]();
+          }
         } else {
           await controller.execute();
         }
@@ -75,6 +119,10 @@ export class Router {
     const DefaultControllerClass = this.registeredControllers.get(controllerName);
     if (DefaultControllerClass) {
       const controller = new DefaultControllerClass();
+      // Set query parameters on the controller
+      if (controller.setQueryParams) {
+        controller.setQueryParams(queryParamsObject, this.currentQueryParams);
+      }
       await controller.execute();
       return;
     }

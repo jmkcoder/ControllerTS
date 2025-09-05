@@ -6,20 +6,39 @@ import { HtmlHelper } from './core/htmlHelper';
 import { Controller } from './core/controller';
 import { serviceContainer } from './core/serviceContainer';
 import { LoggerService, UserService, EmailService } from './services/exampleServices';
+import { ProductService } from './services/productService';
 import './style.css';
 
-// Import controllers to trigger @AutoRegister decorators
-import './controllers/HomeController';
-import './controllers/AboutController';
-
-// Register services in DI container
+// IMPORTANT: Register services FIRST before importing controllers
+// Register LoggerService first (no dependencies)
 serviceContainer.addSingleton(LoggerService);
-serviceContainer.addScoped(UserService);
-serviceContainer.addTransient(EmailService);
+
+// Register services with explicit factories to handle dependencies
+serviceContainer.addScopedFactory(UserService, (container) => {
+  const logger = container.getService(LoggerService);
+  return new UserService(logger);
+});
+
+serviceContainer.addTransientFactory(EmailService, (container) => {
+  const logger = container.getService(LoggerService);
+  return new EmailService(logger);
+});
+
+serviceContainer.addScopedFactory(ProductService, (container) => {
+  const logger = container.getService(LoggerService);
+  return new ProductService(logger);
+});
+
 serviceContainer.addSingleton(ViewEngine);
 
-// Import controllers above already triggered @AutoRegister decorators
-// Now initialize ControllerDiscovery and register all controllers
+// NOW import controllers to trigger @AutoRegister decorators
+// This ensures services are available when controllers are constructed
+import './controllers/HomeController';
+import './controllers/AboutController';
+import './controllers/ProductController';
+
+// Controllers are now imported after service registration
+// Initialize ControllerDiscovery and register all controllers
 ControllerDiscovery.registerAllControllers();
 
 // Initialize HtmlHelper for MVC attributes immediately

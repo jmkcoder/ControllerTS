@@ -22,7 +22,7 @@ export class HomeController extends Controller {
       this.logger.log('HomeController created with injected dependencies');
     } catch (error) {
       // Fallback if DI services aren't available yet
-      console.warn('DI services not available, creating fallback instances');
+      console.warn('DI services not available, creating fallback instances', error);
       this.logger = new LoggerService();
       this.userService = new UserService(this.logger);
       this.emailService = new EmailService(this.logger);
@@ -157,5 +157,99 @@ export class HomeController extends Controller {
         processedData: data
       };
     }
+  }
+
+  // New method to demonstrate query parameter handling
+  @route('home/search')
+  async search(queryParams?: Record<string, string>): Promise<void> {
+    // Get query parameters using the new methods
+    const query = this.getQueryParam('q') || this.getQueryParam('query') || '';
+    const page = parseInt(this.getQueryParam('page') || '1', 10);
+    const pageSize = parseInt(this.getQueryParam('pageSize') || '10', 10);
+    const category = this.getQueryParam('category') || 'all';
+    
+    this.logger.log(`Search performed: query="${query}", page=${page}, pageSize=${pageSize}, category=${category}`);
+
+    // Simulate search results
+    const allResults = [
+      { id: 1, title: 'TypeScript Guide', category: 'programming' },
+      { id: 2, title: 'MVC Architecture', category: 'architecture' },
+      { id: 3, title: 'Dependency Injection', category: 'patterns' },
+      { id: 4, title: 'Router Configuration', category: 'programming' },
+      { id: 5, title: 'Query Parameters', category: 'programming' }
+    ];
+
+    // Filter by query and category
+    let filteredResults = allResults;
+    if (query) {
+      filteredResults = allResults.filter(item => 
+        item.title.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+    if (category !== 'all') {
+      filteredResults = filteredResults.filter(item => item.category === category);
+    }
+
+    // Paginate results
+    const totalResults = filteredResults.length;
+    const totalPages = Math.ceil(totalResults / pageSize);
+    const startIndex = (page - 1) * pageSize;
+    const paginatedResults = filteredResults.slice(startIndex, startIndex + pageSize);
+
+    await this.View('views/search.njk', {
+      title: 'Search Results',
+      query,
+      category,
+      page,
+      pageSize,
+      totalResults,
+      totalPages,
+      results: paginatedResults,
+      queryParams: this.getQueryParams(),
+      hasResults: paginatedResults.length > 0,
+      pagination: {
+        hasPrevious: page > 1,
+        hasNext: page < totalPages,
+        previousPage: page - 1,
+        nextPage: page + 1,
+        pages: Array.from({ length: totalPages }, (_, i) => i + 1)
+      }
+    });
+  }
+
+  // Method to demonstrate redirect with query parameters
+  @route('home/redirect-with-params')
+  async redirectWithParams(): Promise<any> {
+    // Redirect to search with query parameters
+    return this.Redirect('/home/search', {
+      q: 'TypeScript',
+      page: '1',
+      category: 'programming'
+    });
+  }
+
+  // Method to demonstrate building URLs with query parameters
+  @route('home/url-builder')
+  async urlBuilder(): Promise<void> {
+    const searchUrl = this.buildUrl('/home/search', {
+      q: 'example',
+      page: '2',
+      category: 'programming'
+    });
+    
+    const actionUrl = this.buildActionUrl('search', 'home', {
+      q: 'demo',
+      category: 'architecture'
+    });
+
+    await this.View('views/demo.njk', {
+      title: 'URL Builder Demo',
+      message: 'Examples of building URLs with query parameters',
+      data: {
+        searchUrl,
+        actionUrl,
+        currentParams: this.getQueryParams()
+      }
+    });
   }
 }
