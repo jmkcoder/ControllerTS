@@ -18,8 +18,6 @@ export function route(path: string, method: string = 'GET') {
       method: method.toUpperCase()
     });
 
-    console.log(`Route registered: ${normalizedPath} -> ${target.constructor.name}.${propertyKey} [${method.toUpperCase()}]`);
-    
     return descriptor;
   };
 }

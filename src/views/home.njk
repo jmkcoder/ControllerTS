@@ -165,7 +165,6 @@
   <script>
     // Simple test function (kept for basic onclick demo)
     function testBasicFunction() {
-      console.log('🧪 Basic test function called');
       const resultsDiv = document.getElementById('results');
       resultsDiv.innerHTML = '<div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 4px;">✅ Basic JavaScript is working!</div>';
     }
@@ -175,10 +174,7 @@
     
     // Optimized MVC initialization - no artificial delays
     function initializeMVC() {
-      console.log('🚀 Fast MVC initialization...');
-      
       const mvcButtons = document.querySelectorAll('[mvc-controller]');
-      console.log(`Found ${mvcButtons.length} MVC buttons`);
       
       // Quick debug info
       const debugDiv = document.createElement('div');
@@ -204,25 +200,19 @@
       
       // Test document-level click listener
       document.addEventListener('click', (e) => {
-        console.log('📋 Document click listener fired:', e.target);
-        
         // Check for MVC attributes
         const target = e.target;
         const controller = target.getAttribute('mvc-controller');
         const action = target.getAttribute('mvc-action');
         
         if (controller && action) {
-          console.log('🎯 Found MVC attributes on clicked element!', { controller, action });
           e.preventDefault();
           
           // Call the action
           if (window.Html && window.Html.Action) {
-            console.log('Calling Html.Action...');
             const resultTarget = target.getAttribute('mvc-result-target');
             
             window.Html.Action(controller, action, {}).then(result => {
-              console.log('Action result:', result);
-              
               if (resultTarget) {
                 const resultsDiv = document.getElementById(resultTarget);
                 if (resultsDiv && result.success) {
@@ -240,7 +230,6 @@
     
     // Legacy button example (for demonstrating Html.Action API)
     document.getElementById('legacy-btn').addEventListener('click', async function() {
-      console.log('🔧 Legacy button clicked');
       const resultsDiv = document.getElementById('results');
       resultsDiv.innerHTML = '<em>Calling legacy action...</em>';
       

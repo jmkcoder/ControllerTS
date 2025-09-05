@@ -50,7 +50,6 @@ export class Controller {
    * Redirect to another route (using History API)
    */
   protected Redirect(route: string): { redirect: true; route: string } {
-    console.log(`🔄 Redirecting to route: ${route}`);
     const path = route.startsWith('/') ? route : `/${route}`;
     
     if (Controller.routerInstance && Controller.routerInstance.navigateTo) {
@@ -69,7 +68,6 @@ export class Controller {
    * Redirect to an external URL
    */
   protected RedirectToUrl(url: string): { redirect: true; url: string } {
-    console.log(`🔄 Redirecting to URL: ${url}`);
     window.location.href = url;
     return { redirect: true, url };
   }
@@ -90,8 +88,6 @@ export class Controller {
       // Default to controller/action pattern
       route = controller ? `/${controller.toLowerCase()}/${action}` : `/${targetController.toLowerCase()}/${action}`;
     }
-    
-    console.log(`🔄 Redirecting to action: ${targetController}.${action} -> ${route}`);
     
     if (Controller.routerInstance && Controller.routerInstance.navigateTo) {
       // Use router's navigateTo method

@@ -91,7 +91,6 @@ export class HomeController extends Controller {
   // Another demo method for form submission
   @route('home/submit')
   async submitForm(formData: any): Promise<any> {
-    console.log('Form submitted with data:', formData);
     return {
       success: true,
       message: 'Form submitted successfully!',
@@ -102,25 +101,21 @@ export class HomeController extends Controller {
   // Demo redirect methods
   @route('home/redirect-home')
   async redirectToHome(): Promise<any> {
-    console.log('Redirecting to home...');
     return this.Redirect('/');  // Use clean URL format
   }
 
   @route('home/redirect-about')
   async redirectToAbout(): Promise<any> {
-    console.log('Redirecting to about page...');
     return this.Redirect('/about');  // Use clean URL format
   }
 
   @route('home/redirect-google')
   async redirectToGoogle(): Promise<any> {
-    console.log('Redirecting to Google...');
     return this.RedirectToUrl('https://www.google.com');
   }
 
   @route('home/redirect-action')
   async redirectToAction(): Promise<any> {
-    console.log('Redirecting to demo action...');
     return this.RedirectToAction('demoAction');  // Use actual method name
   }
 
@@ -148,8 +143,6 @@ export class HomeController extends Controller {
   // Demo method that conditionally redirects
   @route('home/process')
   async processAndRedirect(data: any): Promise<any> {
-    console.log('Processing data:', data);
-    
     // Simulate some processing logic
     if (data && data.redirect === 'true') {
       return this.Redirect('/');  // Use clean URL format for home

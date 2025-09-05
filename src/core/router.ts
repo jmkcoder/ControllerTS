@@ -17,8 +17,6 @@ export class Router {
   }
 
   init() {
-    console.log('Router init called');
-    this.discoverRoutes();
     // Use HTML5 History API instead of hash-based routing
     window.addEventListener('popstate', () => this.route());
     // Handle initial route on page load
@@ -27,40 +25,18 @@ export class Router {
     this.interceptLinks();
   }
 
-  /**
-   * Discover routes from decorators and generate default controller/action routes
-   */
-  private discoverRoutes() {
-    console.log('Discovering routes...');
-    
-    // Get routes from decorators
-    const decoratorRoutes = getRegisteredRoutes();
-    for (const [path, routeInfo] of decoratorRoutes) {
-      console.log(`Discovered decorator route: ${path} -> ${routeInfo.controller.name}.${routeInfo.action}`);
-    }
-
-    console.log(`Registered controllers: ${Array.from(this.registeredControllers.keys()).join(', ')}`);
-  }
-
   private async route() {
     const path = window.location.pathname.replace(/^\//, '') || 'home';
-    console.log('🚀 Router.route() called with path:', path);
-    console.log('🌍 Current URL:', window.location.href);
-    console.log('📍 Pathname:', window.location.pathname);
-    console.log('# Hash:', window.location.hash);
 
     // First, check decorator routes
     const decoratorRoutes = getRegisteredRoutes();
     if (decoratorRoutes.has(path)) {
       const routeInfo = decoratorRoutes.get(path)!;
-      console.log(`Found decorator route: ${path} -> ${routeInfo.controller.name}.${routeInfo.action}`);
-      
+
       const controller = new routeInfo.controller();
       if (typeof controller[routeInfo.action] === 'function') {
-        console.log(`Executing action: ${routeInfo.action}`);
         await controller[routeInfo.action]();
       } else {
-        console.error(`Action ${routeInfo.action} not found on controller ${routeInfo.controller.name}`);
         this.handle404();
       }
       return;
@@ -70,7 +46,6 @@ export class Router {
     const LegacyControllerClass = this.routes[path];
     if (LegacyControllerClass) {
       const controller = new LegacyControllerClass();
-      console.log('Controller created, executing...');
       await controller.execute();
       return;
     }
@@ -81,18 +56,14 @@ export class Router {
       const controllerName = parts[0].toLowerCase();
       const actionName = parts[1];
       
-      console.log(`Trying controller/action pattern: ${controllerName}/${actionName}`);
-      
       const RegisteredControllerClass = this.registeredControllers.get(controllerName);
       if (RegisteredControllerClass) {
         const controller = new RegisteredControllerClass();
         
         // Check if the action exists on the controller
         if (typeof controller[actionName] === 'function') {
-          console.log(`Executing action: ${controllerName}.${actionName}`);
           await controller[actionName]();
         } else {
-          console.log(`Action ${actionName} not found on ${controllerName}, falling back to execute()`);
           await controller.execute();
         }
         return;
@@ -103,7 +74,6 @@ export class Router {
     const controllerName = path.toLowerCase();
     const DefaultControllerClass = this.registeredControllers.get(controllerName);
     if (DefaultControllerClass) {
-      console.log(`Found controller: ${controllerName}, executing default action`);
       const controller = new DefaultControllerClass();
       await controller.execute();
       return;
@@ -144,23 +114,20 @@ export class Router {
    * Navigate to a new route using History API
    */
   navigateTo(path: string) {
-    console.log('🧭 Router.navigateTo() called with path:', path);
-    console.log('🔍 Current pathname:', window.location.pathname);
-    console.log('🔍 Current search:', window.location.search);
     
     // Only update history if the path is different (ignore hash changes)
     const currentPath = window.location.pathname + window.location.search;
-    if (path !== currentPath) {
-      console.log('✅ Path is different, updating history and routing...');
+    try {
+      if (path !== currentPath) {
       window.history.pushState({}, '', path);
       this.route();
-    } else {
-      console.log('❌ Path is the same, no action needed');
+      }
+    } catch (error) {
+      this.route(); // Re-render current route to maintain app state
     }
   }
 
   private handle404() {
-    console.log('404 - Controller not found');
     document.body.innerHTML = '<h1>404 - Not Found</h1>';
   }
 }

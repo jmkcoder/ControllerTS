@@ -12,12 +12,11 @@ export class HtmlHelper {
       
       // Handle redirects
       if (result.success && result.data && result.data.redirect) {
-        console.log('🔄 Action returned redirect:', result.data);
         
         if (result.data.route) {
           // Route-based redirect - use History API
           const path = result.data.route.startsWith('/') ? result.data.route : `/${result.data.route}`;
-          console.log('🔄 Redirecting to route:', path);
+
           if ((window as any).router && (window as any).router.navigateTo) {
             (window as any).router.navigateTo(path);
           } else {
@@ -32,7 +31,7 @@ export class HtmlHelper {
           const route = result.data.controller ? 
             `/${result.data.controller.toLowerCase()}/${result.data.action}` : 
             `/${result.data.action}`;
-          console.log('🔄 Redirecting to action route:', route);
+
           if ((window as any).router && (window as any).router.navigateTo) {
             (window as any).router.navigateTo(route);
           } else {
@@ -59,7 +58,6 @@ export class HtmlHelper {
       return;
     }
 
-    console.log('🚀 Initializing MVC attributes...');
     this.initialized = true;
     
     // Use event delegation to handle dynamically loaded content
@@ -79,7 +77,6 @@ export class HtmlHelper {
         return;
       }
       
-      console.log(`🎯 MVC click: ${controller}.${action}`);
       event.preventDefault();
       
       // Get additional data from attributes
@@ -142,15 +139,12 @@ export class HtmlHelper {
 
     // Handle form submissions with mvc attributes
     document.addEventListener('submit', async (event) => {
-      console.log('Form submit event detected:', event.target);
       const target = event.target as HTMLFormElement;
       const controller = target.getAttribute('mvc-controller');
       const action = target.getAttribute('mvc-action');
       
-      console.log('Form MVC attributes found:', { controller, action });
       
       if (controller && action) {
-        console.log(`Calling MVC form action: ${controller}.${action}`);
         event.preventDefault();
         
         // Get form data
@@ -164,13 +158,10 @@ export class HtmlHelper {
           submitButton.disabled = true;
           
           try {
-            console.log('Making form action call...');
             const result = await this.Action(controller, action, formData);
-            console.log('Form action result:', result);
             
             // Handle redirects
             if (result.redirected) {
-              console.log('🔄 Form action triggered redirect, stopping UI updates');
               return; // Don't update UI for redirects
             }
             
@@ -212,13 +203,10 @@ export class HtmlHelper {
         }
       }
     });
-
-    console.log('🎯 MVC attribute bindings initialized successfully');
   }
 }
 
 // Make HtmlHelper available globally
 if (typeof window !== 'undefined') {
   (window as any).Html = HtmlHelper;
-  console.log('🌐 HtmlHelper attached to window.Html');
 }

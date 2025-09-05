@@ -7,18 +7,6 @@ export class ViewEngine {
    */
   static clearCache(): void {
     Object.keys(templateCache).forEach(key => delete templateCache[key]);
-    console.log('🗑️ Template cache cleared');
-  }
-
-  /**
-   * Initialize HMR listener for template changes
-   */
-  static initHMR(): void {
-    if (typeof window !== 'undefined' && (window as any).__vite_plugin_react_preamble_installed__) {
-      // Simple polling approach for development
-      // In a real implementation, you'd use Vite's HMR API
-      console.log('� HMR initialized for templates');
-    }
   }
   /**
    * Loads a template and compiles it to HTML at runtime
@@ -46,8 +34,6 @@ export class ViewEngine {
     const fullUrl = `/src/${templatePath}${cacheBuster}`;
 
     try {
-      console.log(`🔄 Fetching template: ${fullUrl}`);
-      
       // Fetch the .njk template file through Vite's dev server with cache busting
       const response = await fetch(fullUrl, {
         cache: isDevelopment ? 'no-cache' : 'default',
@@ -63,11 +49,9 @@ export class ViewEngine {
       }
 
       const templateContent = await response.text();
-      console.log(`📄 Template content (first 100 chars): ${templateContent.substring(0, 100)}...`);
       
       // Compile the template at runtime
       const compiledHtml = await this.compileTemplate(templateContent, context);
-      console.log(`✅ Template compiled, HTML length: ${compiledHtml.length}`);
       
       // Cache the compiled HTML only in production
       if (!isDevelopment) {
@@ -133,8 +117,6 @@ export class ViewEngine {
     const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const cacheBuster = isDevelopment ? `?t=${Date.now()}&r=${Math.random()}` : '';
     
-    console.log(`🔄 Fetching base template: /src/${templatePath}${cacheBuster}`);
-    
     const response = await fetch(`/src/${templatePath}${cacheBuster}`, {
       cache: isDevelopment ? 'no-cache' : 'default',
       headers: isDevelopment ? {
@@ -149,7 +131,6 @@ export class ViewEngine {
     }
     
     const content = await response.text();
-    console.log(`📄 Base template content (first 100 chars): ${content.substring(0, 100)}...`);
     
     return content;
   }

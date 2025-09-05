@@ -49,7 +49,6 @@ export default defineConfig(({ command, mode }) => {
               const urlPath = (req as any).url.split('?')[0];
               const relativePath = urlPath.replace('/src/', '');
               const filePath = path.join(process.cwd(), 'src', relativePath);
-              console.log(`Serving fresh template: ${filePath}`);
               
               try {
                 // Always read fresh from file system
@@ -80,7 +79,6 @@ export default defineConfig(({ command, mode }) => {
               name: 'nunjucks-hmr',
               handleHotUpdate({ file, server }) {
                 if (file.endsWith('.njk')) {
-                  console.log(`🔥 Nunjucks file changed: ${file}`);
                   // Send a custom HMR message to clear template cache
                   server.ws.send({
                     type: 'custom',
