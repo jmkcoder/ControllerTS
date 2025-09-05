@@ -1,8 +1,36 @@
 import { ViewEngine } from "./viewEngine";
+import { serviceContainer } from "./serviceContainer";
 
 export class Controller {
   [key: string]: any; // Allow dynamic method access
   private static routerInstance: any = null;
+
+  constructor() {
+    // Initialize services from DI container if available
+    this.initializeServices();
+  }
+
+  /**
+   * Initialize services from the DI container
+   */
+  private initializeServices(): void {
+    // Services will be injected automatically through decorators
+    // or can be manually retrieved using getService()
+  }
+
+  /**
+   * Get service from DI container
+   */
+  protected getService<T>(serviceType: new (...args: any[]) => T): T {
+    return serviceContainer.getService(serviceType);
+  }
+
+  /**
+   * Try to get service from DI container
+   */
+  protected tryGetService<T>(serviceType: new (...args: any[]) => T): T | null {
+    return serviceContainer.tryGetService(serviceType);
+  }
 
   // Set router instance for redirects
   static setRouter(router: any) {

@@ -14,15 +14,51 @@
   </div>
 
   <h1>{{ title }}</h1>
-  <p>{{ message }}</p>
+  <p class="subtitle">{{ subtitle || message }}</p>
   
-  <div style="margin: 20px 0;">
-    <h2>Page Navigation</h2>
-    <nav style="margin-bottom: 20px;">
-      <a href="#details-section" style="margin-right: 10px; color: #007bff;">Jump to Details</a>
-      <a href="#features-section" style="margin-right: 10px; color: #007bff;">Jump to Features</a>
-    </nav>
-  </div>
+  {% if currentUser %}
+    <div class="user-info">
+      <h3>👤 Current User (from UserService)</h3>
+      <ul>
+        <li><strong>ID:</strong> {{ currentUser.id }}</li>
+        <li><strong>Name:</strong> {{ currentUser.name }}</li>
+        <li><strong>Email:</strong> {{ currentUser.email }}</li>
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if allUsers %}
+    <div class="users-list">
+      <h3>👥 All Users ({{ allUsers.length }})</h3>
+      <ul>
+        {% for user in allUsers %}
+          <li>{{ user.name }} - {{ user.email }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if diInfo %}
+    <div class="di-info">
+      <h3>💉 Dependency Injection Info</h3>
+      <ul>
+        <li><strong>UserService:</strong> {{ diInfo.userService }}</li>
+        <li><strong>LoggerService:</strong> {{ diInfo.loggerService }}</li>
+        <li><strong>EmailService:</strong> {{ diInfo.emailService }}</li>
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if recentLogs %}
+    <div class="logs">
+      <h3>📝 Recent Log Entries</h3>
+      <ul>
+        {% for log in recentLogs %}
+          <li><code>{{ log }}</code></li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
   
   <div id="details-section" style="margin: 20px 0; padding: 15px; background: #e7f3ff; border-radius: 4px;">
     <h3>Demo Action Details</h3>
@@ -34,30 +70,103 @@
   </div>
 
   <div id="features-section" style="margin: 20px 0;">
-    <h3>Demo Features</h3>
+    <h3>🚀 Framework Features with DI</h3>
     <p>This page demonstrates:</p>
     <ul>
-      <li>Clean URL routing (/home/demo)</li>
-      <li>Controller action with view rendering</li>
-      <li>Data passing from controller to view</li>
-      <li>Client-side navigation without page reload</li>
-      <li><strong>Normal hash behavior for page anchors</strong></li>
+      <li>✅ Clean URL routing (/home/demo)</li>
+      <li>✅ Controller action with view rendering</li>
+      <li>✅ <strong>Dependency injection in controllers</strong></li>
+      <li>✅ Service lifetimes (Singleton, Scoped, Transient)</li>
+      <li>✅ Automatic service resolution</li>
+      <li>✅ Client-side navigation without page reload</li>
     </ul>
-    
-    <div style="margin: 20px 0; padding: 15px; background: #d4edda; border-radius: 4px;">
-      <h4>Hash Behavior Examples</h4>
-      <p>Try these links to see how hashes work normally:</p>
-      <ul>
-        <li><a href="#details-section">Scroll to Details Section</a></li>
-        <li><a href="#features-section">Scroll to Features Section</a></li>
-        <li><a href="/home#demo-section">Go to Home page Demo Section</a></li>
-        <li><a href="/about#info-section">Go to About page Info Section</a></li>
-      </ul>
-      <p><em>Note: Hashes now work like normal HTML anchors, while clean URLs handle routing!</em></p>
-    </div>
   </div>
 
-  <div style="margin: 20px 0;">
-    <a href="/" style="padding: 10px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">← Back to Home</a>
+  <div class="actions">
+    <h3>🎯 Test Actions</h3>
+    <div class="button-group">
+      <button onclick="loadContent('/home/demo')">🔄 Reload Demo</button>
+      <button onclick="loadContent('/home/json')">📄 Get JSON Data</button>
+      <button onclick="loadContent('/home')">🏠 Back to Home</button>
+      <button onclick="testAjax()">🚀 Test AJAX Call</button>
+    </div>
   </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function testAjax() {
+  try {
+    const response = await fetch('/home/json');
+    const result = await response.json();
+    alert('AJAX Response: ' + JSON.stringify(result, null, 2));
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+function loadContent(url) {
+  window.history.pushState({}, '', url);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+}
+</script>
+{% endblock %}
+
+{% block styles %}
+<style>
+.user-info, .users-list, .di-info, .logs, .actions {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.user-info h3, .users-list h3, .di-info h3, .logs h3, .actions h3 {
+  margin-top: 0;
+  color: #495057;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.button-group button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.button-group button:hover {
+  background: #0056b3;
+}
+
+.logs ul {
+  background: #2d3748;
+  color: #e2e8f0;
+  padding: 15px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.logs li {
+  margin: 5px 0;
+  list-style: none;
+}
+
+.subtitle {
+  font-style: italic;
+  color: #6c757d;
+  margin-bottom: 20px;
+}
+</style>
 {% endblock %}

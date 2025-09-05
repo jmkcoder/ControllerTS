@@ -1,4 +1,5 @@
 import type { Controller } from './controller';
+import { serviceContainer } from './serviceContainer';
 
 export class ControllerManager {
   private static controllers: Record<string, any> = {};
@@ -13,14 +14,51 @@ export class ControllerManager {
       throw new Error(`Controller '${controllerName}' not found`);
     }
 
-    const controller = new ControllerClass();
-    const action = (controller as any)[actionName];
+    // Try to get controller from DI container first, fallback to direct instantiation
+    let controller: any;
+    try {
+      controller = serviceContainer.getService(ControllerClass);
+    } catch {
+      // If not registered in DI container, create instance directly
+      controller = this.createControllerInstance(ControllerClass);
+    }
+
+    const action = controller[actionName];
     
     if (typeof action !== 'function') {
       throw new Error(`Action '${actionName}' not found in controller '${controllerName}'`);
     }
 
     return await action.call(controller, data);
+  }
+
+  /**
+   * Create controller instance with dependency injection
+   */
+  private static createControllerInstance(ControllerClass: any): any {
+    // Get constructor parameters using reflection metadata
+    const paramTypes = (Reflect as any).getMetadata?.('design:paramtypes', ControllerClass) || [];
+    
+    if (paramTypes.length === 0) {
+      // No dependencies, create simple instance
+      return new ControllerClass();
+    }
+
+    // Resolve dependencies from DI container
+    const dependencies = paramTypes.map((paramType: any) => {
+      if (paramType === Object || paramType === undefined) {
+        return undefined;
+      }
+      try {
+        return serviceContainer.getService(paramType);
+      } catch {
+        // If dependency not found, try to create it
+        console.warn(`Dependency ${paramType.name} not found in DI container, creating new instance`);
+        return new paramType();
+      }
+    });
+
+    return new ControllerClass(...dependencies);
   }
 
   // Helper method to make AJAX calls from templates

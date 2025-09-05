@@ -1,13 +1,53 @@
 import { Controller } from '../core/controller';
 import { route } from '../core/decorators';
+import { Injectable } from '../core/diDecorators';
+import { UserService, LoggerService, EmailService } from '../services/exampleServices';
 
+@Injectable
 export class HomeController extends Controller {
+  private userService: UserService;
+  private logger: LoggerService;
+  private emailService: EmailService;
+  
+  constructor() {
+    super();
+    
+    // Get services from DI container or create fallback instances
+    try {
+      this.userService = this.getService(UserService);
+      this.logger = this.getService(LoggerService);
+      this.emailService = this.getService(EmailService);
+      this.logger.log('HomeController created with injected dependencies');
+    } catch (error) {
+      // Fallback if DI services aren't available yet
+      console.warn('DI services not available, creating fallback instances');
+      this.logger = new LoggerService();
+      this.userService = new UserService(this.logger);
+      this.emailService = new EmailService(this.logger);
+      this.logger.log('HomeController created with fallback dependencies');
+    }
+  }
   @route('home')
   @route('')  // Root route
   async execute(): Promise<void> {
+    this.logger.log('Home page accessed');
+    
+    const currentUser = this.userService.getCurrentUser();
+    const allUsers = this.userService.getAllUsers();
+    
     await this.View('views/home.njk', { 
-        title: 'Welcome to TypeScript MVC!', 
-        subtitle: 'This is the home page rendered by Nunjucks!' 
+        title: 'Welcome to ControllerTS with DI!', 
+        subtitle: 'TypeScript MVC Framework with Dependency Injection',
+        currentUser,
+        userCount: allUsers.length,
+        features: [
+          '🎯 @route decorators for clean routing',
+          '💉 Dependency injection like ASP.NET Core', 
+          '🏗️ MVC architecture pattern',
+          '📝 Nunjucks templating',
+          '🚀 TypeScript support',
+          '📱 Clean URLs with History API'
+        ]
    });
   }
 
@@ -19,13 +59,31 @@ export class HomeController extends Controller {
   // Demo method that can be called from the template
   @route('home/demo')
   async demoAction(data?: any): Promise<void> {
-    console.log('Demo action called with data:', data);
+    this.logger.log(`Demo action called with data: ${JSON.stringify(data)}`);
     
-    // Return a view with demo data
+    const user = this.userService.getCurrentUser();
+    if (user) {
+      // Demonstrate transient service - new instance each time
+      const emailSent = this.emailService.sendWelcomeEmail(user);
+      this.logger.log(`Welcome email sent: ${emailSent}`);
+    }
+
+    const users = this.userService.getAllUsers();
+    const logs = this.logger.getLogs();
+    
+    // Return a view with demo data including DI information
     await this.View('views/demo.njk', {
-      title: 'Demo Action Page',
-      message: 'Hello from the demo action!',
+      title: 'Demo Action Page with DI',
+      message: 'Hello from the demo action with dependency injection!',
       timestamp: new Date().toISOString(),
+      currentUser: user,
+      allUsers: users,
+      recentLogs: logs.slice(-5), // Show last 5 log entries
+      diInfo: {
+        userService: 'Scoped - One instance per request',
+        loggerService: 'Singleton - Same instance across app',
+        emailService: 'Transient - New instance each time'
+      },
       data: data || { source: 'demo-action' }
     });
   }
@@ -66,13 +124,24 @@ export class HomeController extends Controller {
     return this.RedirectToAction('demoAction');  // Use actual method name
   }
 
-  // Demo method that returns JSON
+  // Demo method that returns JSON with DI data
   @route('home/json')
   async getJsonData(): Promise<any> {
+    this.logger.log('JSON API endpoint called');
+    
+    const users = this.userService.getAllUsers();
+    const currentUser = this.userService.getCurrentUser();
+    
     return this.Json({
-      message: 'This is JSON data',
+      message: 'This is JSON data with dependency injection',
       timestamp: new Date().toISOString(),
-      data: { users: ['John', 'Jane', 'Bob'], count: 3 }
+      currentUser,
+      data: { users, count: users.length },
+      serviceInfo: {
+        userService: 'Scoped lifetime',
+        loggerService: 'Singleton lifetime',
+        emailService: 'Transient lifetime'
+      }
     });
   }
 
