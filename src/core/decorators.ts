@@ -1,8 +1,11 @@
 // Store for registered routes
-export const routeRegistry: Map<string, { controller: any; action: string; method: string }> = new Map();
+export const routeRegistry: Map<string, { controller: any; action: string; method: string; actionType?: 'view' | 'object' }> = new Map();
 
 // Store for controller metadata
-export const controllerRegistry: Map<any, { baseRoute: string; actions: Map<string, { route: string; method: string }> }> = new Map();
+export const controllerRegistry: Map<any, { baseRoute: string; actions: Map<string, { route: string; method: string; actionType: 'view' | 'object' }> }> = new Map();
+
+// Store for action types
+export const actionTypeRegistry: Map<string, 'view' | 'object'> = new Map();
 
 /**
  * Controller decorator - defines the base route for a controller
@@ -44,11 +47,12 @@ export function action(actionRoute: string = '', method: string = 'GET') {
       });
     }
     
-    // Store action metadata
+    // Store action metadata with default actionType as 'view'
     const controllerMeta = controllerRegistry.get(constructor)!;
     controllerMeta.actions.set(propertyKey, {
       route: actionRoute,
-      method: method.toUpperCase()
+      method: method.toUpperCase(),
+      actionType: 'view'
     });
     
     // Build full route path
@@ -61,8 +65,57 @@ export function action(actionRoute: string = '', method: string = 'GET') {
     routeRegistry.set(fullRoute, {
       controller: constructor,
       action: propertyKey,
-      method: method.toUpperCase()
+      method: method.toUpperCase(),
+      actionType: 'view'
     });
+
+    return descriptor;
+  };
+}
+
+/**
+ * Object Action decorator - defines an action that only returns objects (JSON)
+ * These actions cannot render views, partial views, or redirects
+ * @param actionRoute - The action route path (e.g., "", "api/users", "data") 
+ * @param method - HTTP method (default: "GET")
+ */
+export function objectAction(actionRoute: string = '', method: string = 'GET') {
+  return function (target: any, propertyKey: string, descriptor?: PropertyDescriptor) {
+    const constructor = target.constructor;
+    
+    // Initialize controller metadata if not exists
+    if (!controllerRegistry.has(constructor)) {
+      controllerRegistry.set(constructor, {
+        baseRoute: '',
+        actions: new Map()
+      });
+    }
+    
+    // Store action metadata with actionType as 'object'
+    const controllerMeta = controllerRegistry.get(constructor)!;
+    controllerMeta.actions.set(propertyKey, {
+      route: actionRoute,
+      method: method.toUpperCase(),
+      actionType: 'object'
+    });
+    
+    // Build full route path
+    const baseRoute = controllerMeta.baseRoute;
+    const fullRoute = baseRoute && actionRoute 
+      ? `${baseRoute}/${actionRoute}`
+      : baseRoute || actionRoute || baseRoute;
+    
+    // Register in the route registry
+    routeRegistry.set(fullRoute, {
+      controller: constructor,
+      action: propertyKey,
+      method: method.toUpperCase(),
+      actionType: 'object'
+    });
+    
+    // Store action type for runtime validation
+    const actionKey = `${constructor.name}.${propertyKey}`;
+    actionTypeRegistry.set(actionKey, 'object');
 
     return descriptor;
   };
@@ -71,22 +124,38 @@ export function action(actionRoute: string = '', method: string = 'GET') {
 /**
  * Get all registered routes (supports both @route and @controller/@action)
  */
-export function getRegisteredRoutes(): Map<string, { controller: any; action: string; method: string }> {
+export function getRegisteredRoutes(): Map<string, { controller: any; action: string; method: string; actionType?: 'view' | 'object' }> {
   return routeRegistry;
 }
 
 /**
  * Get controller metadata
  */
-export function getControllerMetadata(controller: any): { baseRoute: string; actions: Map<string, { route: string; method: string }> } | undefined {
+export function getControllerMetadata(controller: any): { baseRoute: string; actions: Map<string, { route: string; method: string; actionType: 'view' | 'object' }> } | undefined {
   return controllerRegistry.get(controller);
 }
 
 /**
  * Get all registered controllers with their metadata
  */
-export function getRegisteredControllers(): Map<any, { baseRoute: string; actions: Map<string, { route: string; method: string }> }> {
+export function getRegisteredControllers(): Map<any, { baseRoute: string; actions: Map<string, { route: string; method: string; actionType: 'view' | 'object' }> }> {
   return controllerRegistry;
+}
+
+/**
+ * Check if an action is object-only
+ */
+export function isObjectAction(controllerName: string, actionName: string): boolean {
+  const actionKey = `${controllerName}.${actionName}`;
+  return actionTypeRegistry.get(actionKey) === 'object';
+}
+
+/**
+ * Get action type for a specific action
+ */
+export function getActionType(controllerName: string, actionName: string): 'view' | 'object' | undefined {
+  const actionKey = `${controllerName}.${actionName}`;
+  return actionTypeRegistry.get(actionKey);
 }
 
 /**
@@ -104,10 +173,16 @@ export function processControllerRoutes(): void {
       routeRegistry.set(fullRoute, {
         controller: controller,
         action: actionName,
-        method: actionMeta.method
+        method: actionMeta.method,
+        actionType: actionMeta.actionType
       });
       
-      console.log(`🛣️  Registered route: ${actionMeta.method} /${fullRoute} → ${controller.name}.${actionName}`);
+      // Store action type for runtime validation
+      const actionKey = `${controller.name}.${actionName}`;
+      actionTypeRegistry.set(actionKey, actionMeta.actionType);
+      
+      const typeIndicator = actionMeta.actionType === 'object' ? '📦' : '🏠';
+      console.log(`🛣️  Registered route: ${actionMeta.method} /${fullRoute} → ${controller.name}.${actionName} ${typeIndicator}`);
     }
   }
 }

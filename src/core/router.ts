@@ -1,6 +1,7 @@
 import type { Controller } from './controller';
 import { getRegisteredRoutes } from './decorators';
 import type { RequestContext } from './requestPipeline';
+import { ActionValidator } from './actionValidator';
 
 export interface DefaultRouteConfig {
   controller: string;
@@ -154,13 +155,22 @@ export class Router {
       const controller = this.createController(routeInfo.controller, queryParamsObject);
       
       if (typeof controller[routeInfo.action] === 'function') {
-        // Pass query parameters as the first argument if the action accepts parameters
+        // Execute the action and get result
+        let result: any;
         const actionMethod = controller[routeInfo.action];
         if (actionMethod.length > 0) {
-          await controller[routeInfo.action](queryParamsObject);
+          result = await controller[routeInfo.action](queryParamsObject);
         } else {
-          await controller[routeInfo.action]();
+          result = await controller[routeInfo.action]();
         }
+        
+        // Handle the result based on action type
+        await this.handleActionResult(
+          routeInfo.controller.name,
+          routeInfo.action,
+          result,
+          routeInfo.actionType
+        );
       } else {
         this.handle404();
       }
@@ -171,7 +181,9 @@ export class Router {
     const LegacyControllerClass = this.routes[path];
     if (LegacyControllerClass) {
       const controller = this.createController(LegacyControllerClass, queryParamsObject);
-      await controller.execute();
+      const result = await controller.execute();
+      // Legacy routes are treated as view actions
+      await this.handleActionResult(LegacyControllerClass.name, 'execute', result, 'view');
       return;
     }
 
@@ -187,15 +199,20 @@ export class Router {
         
         // Check if the action exists on the controller
         if (typeof controller[actionName] === 'function') {
-          // Pass query parameters as the first argument if the action accepts parameters
+          // Execute action and handle result
+          let result: any;
           const actionMethod = controller[actionName];
           if (actionMethod.length > 0) {
-            await controller[actionName](queryParamsObject);
+            result = await controller[actionName](queryParamsObject);
           } else {
-            await controller[actionName]();
+            result = await controller[actionName]();
           }
+          
+          // Handle result (default to view action for dynamic routes)
+          await this.handleActionResult(RegisteredControllerClass.name, actionName, result, 'view');
         } else {
-          await controller.execute();
+          const result = await controller.execute();
+          await this.handleActionResult(RegisteredControllerClass.name, 'execute', result, 'view');
         }
         return;
       }
@@ -206,12 +223,62 @@ export class Router {
     const DefaultControllerClass = this.registeredControllers.get(controllerName);
     if (DefaultControllerClass) {
       const controller = this.createController(DefaultControllerClass, queryParamsObject);
-      await controller.execute();
+      const result = await controller.execute();
+      await this.handleActionResult(DefaultControllerClass.name, 'execute', result, 'view');
       return;
     }
 
     // 404 - No route found
     this.handle404();
+  }
+
+  /**
+   * Handle action results based on action type
+   */
+  private async handleActionResult(
+    controllerName: string,
+    actionName: string,
+    result: any,
+    actionType?: 'view' | 'object'
+  ): Promise<void> {
+    // Validate the result using ActionValidator
+    const validation = ActionValidator.validateActionResult(controllerName, actionName, result);
+    
+    if (!validation.isValid) {
+      console.error(`❌ Action validation failed: ${validation.error}`);
+      throw new Error(validation.error);
+    }
+    
+    // Handle based on action type or result content
+    const finalActionType = actionType || 'view';
+    
+    if (finalActionType === 'object') {
+      // Object actions should return JSON
+      if (validation.processedResult !== undefined) {
+        this.renderJsonResponse(validation.processedResult);
+      }
+    } else {
+      // View actions handle all types of results
+      if (result && typeof result === 'object') {
+        if (result.redirect) {
+          // Redirect results are handled automatically by controller methods
+          return;
+        } else if (result.json) {
+          // JSON results from view actions
+          this.renderJsonResponse(result.data);
+          return;
+        }
+      }
+      // For view actions, undefined/null results are fine (view was rendered)
+    }
+  }
+
+  /**
+   * Render JSON response to the page
+   */
+  private renderJsonResponse(data: any): void {
+    const jsonString = ActionValidator.processObjectActionResult(data);
+    document.body.innerHTML = `<pre style="font-family: monospace; white-space: pre-wrap; margin: 20px;">${jsonString}</pre>`;
   }
 
   /**

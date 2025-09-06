@@ -1,5 +1,5 @@
 import { Controller } from '../core/controller';
-import { controller, action } from '../core/decorators';
+import { controller, action, objectAction } from '../core/decorators';
 import { Injectable } from '../core/diDecorators';
 import { AutoRegister } from '../core/controllerDiscovery';
 import { UserService, LoggerService, EmailService } from '../services/exampleServices';
@@ -17,6 +17,7 @@ export class HomeController extends Controller {
     super();
     this.logger.log('HomeController created with constructor injection');
   }
+
   @action()    // Maps to /home (controller base route)
   async execute(): Promise<void> {
     this.logger.log('Home page accessed');
@@ -312,4 +313,124 @@ export class HomeController extends Controller {
       queryParams: this.getQueryParams()
     });
   }
+
+  // ========== OBJECT-ONLY ACTIONS ==========
+  // These actions can only return objects/JSON and cannot render views or redirect
+
+  @objectAction('api/users')  // Maps to /home/api/users
+  async getUsersApi(): Promise<any> {
+    this.logger.log('Users API endpoint called');
+    
+    const users = this.userService.getAllUsers();
+    const currentUser = this.userService.getCurrentUser();
+    
+    // Object actions must return objects - no views, no redirects
+    return {
+      success: true,
+      timestamp: new Date().toISOString(),
+      data: {
+        currentUser,
+        users,
+        totalCount: users.length
+      },
+      metadata: {
+        endpoint: 'getUsersApi',
+        version: '1.0',
+        actionType: 'object-only'
+      }
+    };
+  }
+
+  @objectAction('api/stats', 'GET')  // Maps to /home/api/stats
+  async getStatsApi(): Promise<any> {
+    this.logger.log('Stats API endpoint called');
+    
+    const users = this.userService.getAllUsers();
+    const logs = this.logger.getLogs();
+    
+    return {
+      success: true,
+      timestamp: new Date().toISOString(),
+      statistics: {
+        totalUsers: users.length,
+        totalLogs: logs.length,
+        lastActivity: logs.length > 0 ? logs[logs.length - 1] : null,
+        averageLogLevel: 'INFO',
+        systemUptime: Date.now() - (new Date().setHours(0, 0, 0, 0))
+      },
+      meta: {
+        generatedBy: 'HomeController.getStatsApi',
+        cacheExpiry: 300 // 5 minutes
+      }
+    };
+  }
+
+  @objectAction('api/config', 'GET')  // Maps to /home/api/config
+  async getConfigApi(): Promise<any> {
+    // Object actions can return simple objects without Json() wrapper
+    return {
+      success: true,
+      config: {
+        appName: 'ControllerTS MVC Framework',
+        version: '1.0.0',
+        features: [
+          'Dependency Injection',
+          'TypeScript Support',
+          'Clean URLs',
+          'Object-Only Actions',
+          'Nunjucks Templating'
+        ],
+        environment: 'development',
+        apiVersion: 'v1'
+      },
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  @objectAction('api/search', 'POST')  // Maps to /home/api/search
+  async searchApi(queryParams?: Record<string, string>): Promise<any> {
+    const query = this.getQueryParam('q') || '';
+    const category = this.getQueryParam('category') || 'all';
+    
+    // Simulate search results
+    const allItems = [
+      { id: 1, title: 'TypeScript Guide', category: 'programming', score: 0.95 },
+      { id: 2, title: 'MVC Architecture', category: 'architecture', score: 0.88 },
+      { id: 3, title: 'Dependency Injection', category: 'patterns', score: 0.92 },
+      { id: 4, title: 'Object Actions', category: 'features', score: 0.85 }
+    ];
+
+    const filteredResults = allItems.filter(item => {
+      const matchesQuery = !query || item.title.toLowerCase().includes(query.toLowerCase());
+      const matchesCategory = category === 'all' || item.category === category;
+      return matchesQuery && matchesCategory;
+    });
+
+    return {
+      success: true,
+      query: {
+        searchTerm: query,
+        category,
+        timestamp: new Date().toISOString()
+      },
+      results: filteredResults,
+      metadata: {
+        totalFound: filteredResults.length,
+        searchDuration: Math.random() * 100, // Simulated ms
+        categories: ['programming', 'architecture', 'patterns', 'features']
+      }
+    };
+  }
+
+  // This would cause an error if uncommented - object actions cannot redirect
+  // @objectAction('api/invalid-redirect')
+  // async invalidRedirectApi(): Promise<any> {
+  //   return this.Redirect('/home'); // ❌ This will throw an error!
+  // }
+
+  // This would cause an error if uncommented - object actions cannot render views
+  // @objectAction('api/invalid-view')
+  // async invalidViewApi(): Promise<void> {
+  //   await this.View('views/home.njk', {}); // ❌ This will throw an error!
+  // }
 }
