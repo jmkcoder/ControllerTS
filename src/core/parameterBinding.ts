@@ -172,7 +172,14 @@ function isModelClass(type: any): boolean {
     
     // Look for validation metadata using reflection
     const metadataKeys = (Reflect as any).getMetadataKeys?.(prototype) || [];
-    const hasValidationMetadata = metadataKeys.some((key: string) => key.includes('validation'));
+    
+    // Check for the validation metadata symbol or string-based keys
+    const hasValidationMetadata = metadataKeys.some((key: string | symbol) => {
+      if (typeof key === 'symbol') {
+        return key.toString().includes('validation');
+      }
+      return key.includes('validation');
+    });
     
     if (hasValidationMetadata) {
       return true;
@@ -204,7 +211,8 @@ function createAndBindModel<T extends object>(ModelClass: new () => T, formData:
   
   // Mark the model as auto-validated for the controller to pick up
   (model as any).__autoValidated = true;
-  (model as any).__validationResult = ModelValidator.validate(model);
+  const validationResult = ModelValidator.validate(model);
+  (model as any).__validationResult = validationResult;
   
   return model;
 }
@@ -215,9 +223,10 @@ function createAndBindModel<T extends object>(ModelClass: new () => T, formData:
 export async function callActionWithBinding(
   controller: any, 
   actionName: string, 
-  formData: any
+  formData: any,
+  explicitControllerName?: string
 ): Promise<any> {
-  const controllerName = controller.constructor.name;
+  const controllerName = explicitControllerName || controller.constructor.name;
   const action = controller[actionName];
   
   if (typeof action !== 'function') {

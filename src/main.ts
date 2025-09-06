@@ -55,6 +55,11 @@ async function initializeApplication() {
     // Process controller routes from @controller/@action decorators
     processControllerRoutes();
 
+    // WORKAROUND: Manually register parameter types since webpack minification affects reflection metadata
+    // Register strongly typed parameters for actions that need automatic model binding
+    registerActionParameters('HomeController', 'registerUser', [UserRegistrationModel]);
+    registerActionParameters('HomeController', 'submitContact', [ContactFormModel]);
+
     // Configure error pages (no need to touch core router!)
     // Use configuration manager to determine error page setup
     const errorConfig = configManager.get('errors.showStackTrace', true) ? {
@@ -84,10 +89,7 @@ async function initializeApplication() {
     
     configureErrorPages(errorConfig);
 
-    // WORKAROUND: Manually register parameter types since Vite/ESBuild doesn't support reflection metadata
-    // Register strongly typed parameters for actions that need automatic model binding
-    registerActionParameters('HomeController', 'registerUser', [UserRegistrationModel]);
-    registerActionParameters('HomeController', 'submitContact', [ContactFormModel]);
+    
 
     // Initialize HtmlHelper for MVC attributes immediately
     HtmlHelper.initializeMvcAttributes();

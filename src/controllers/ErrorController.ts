@@ -1,11 +1,12 @@
 import { Controller } from '../core/controller';
-import { action } from '../core/decorators';
+import { action, controller } from '../core/decorators';
 
 /**
  * Error Controller
  * Handles error pages via controller actions
  * This provides an alternative to template-only error handling
  */
+@controller('error')
 export class ErrorController extends Controller {
   
   /**

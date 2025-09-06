@@ -33,13 +33,35 @@ export class ControllerDiscovery {
     /**
      * Register a controller class for discovery
      */
-    static registerController(controllerClass: any): void {
-        const name = controllerClass.name;
-        const controllerName = name.endsWith('Controller') 
-            ? name.slice(0, -10) // Remove 'Controller' suffix
-            : name;
+    static registerController(controllerClass: any, controllerName?: string): void {
+        let name: string;
+        
+        if (controllerName) {
+            // Use provided name
+            name = controllerName;
+        } else {
+            // Try to get name from @controller decorator metadata
+            let metadataName: string | null = null;
+            try {
+                const { controllerRegistry } = require('./decorators');
+                const controllerMetadata = controllerRegistry.get(controllerClass);
+                metadataName = controllerMetadata ? controllerMetadata.baseRoute : null;
+            } catch (error) {
+                metadataName = null;
+            }
+            
+            // Fallback to class name (but this will be minified in production)
+            if (metadataName) {
+                name = metadataName;
+            } else {
+                const className = controllerClass.name;
+                name = className.endsWith('Controller') 
+                    ? className.slice(0, -10) // Remove 'Controller' suffix
+                    : className;
+            }
+        }
 
-        this.controllers.set(controllerName, controllerClass);
+        this.controllers.set(name, controllerClass);
     }
     
     /**

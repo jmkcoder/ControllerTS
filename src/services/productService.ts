@@ -1,4 +1,5 @@
 import { LoggerService } from './exampleServices';
+import { Injectable } from '../core/diDecorators';
 
 export interface Product {
   id: number;
@@ -9,6 +10,7 @@ export interface Product {
   inStock: boolean;
 }
 
+@Injectable
 export class ProductService {
   private products: Product[] = [
     { id: 1, name: 'TypeScript Handbook', category: 'books', price: 29.99, tags: ['typescript', 'programming'], inStock: true },

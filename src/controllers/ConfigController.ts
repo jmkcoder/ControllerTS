@@ -4,12 +4,13 @@
  */
 
 import { Controller } from '../core/controller';
-import { action } from '../core/decorators';
+import { action, controller } from '../core/decorators';
 import { ConfigurationManager } from '../core/configurationManager';
 import { ApiService } from '../services/apiService';
 import { AutoRegister } from '../core/controllerDiscovery';
 import { Injectable } from '../core/diDecorators';
 
+@controller('config')
 @AutoRegister
 @Injectable
 export class ConfigController extends Controller {

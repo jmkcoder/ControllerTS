@@ -26,18 +26,12 @@ export class AutoControllerLoader {
      */
     static async loadAllControllers(): Promise<void> {
         try {
-            // Use multiple glob patterns to find controllers anywhere in src
-            // Vite requires literal strings, so we can't use a loop
-            const allControllerModules: Record<string, () => Promise<any>> = {
-                // Pattern 1: Any *Controller.ts file anywhere in src
-                ...import.meta.glob('../**/*Controller.ts', { eager: false }),
-                
-                // Pattern 2: Files in any controller/ subdirectory
-                ...import.meta.glob('../**/controller/*Controller.ts', { eager: false }),
-                
-                // Pattern 3: Files in any controllers/ subdirectory  
-                ...import.meta.glob('../**/controllers/*Controller.ts', { eager: false }),
-            };
+            // Use webpack-generated controller imports for true dynamic discovery
+            const { controllerModules, getControllerCount } = await import('./generated-controllers');
+            
+            console.log(`🔍 Found ${getControllerCount()} controller files to load`);
+            
+            const allControllerModules = controllerModules;
             
             // Load each controller module
             const loadPromises = Object.entries(allControllerModules).map(async ([path, importFn]) => {
@@ -53,8 +47,23 @@ export class AutoControllerLoader {
                             // Register with DI container (as transient - new instance per request)
                             serviceContainer.addTransient(cls);
                             
+                            // Register with ControllerDiscovery for routing
+                            const { ControllerDiscovery } = require('./controllerDiscovery');
+                            const { controllerRegistry } = require('./decorators');
+                            
+                            // Get the correct controller name from @controller decorator metadata
+                            const controllerMetadata = controllerRegistry.get(cls);
+                            const controllerName = controllerMetadata ? controllerMetadata.baseRoute : (
+                                cls.name.endsWith('Controller') ? cls.name.slice(0, -10) : cls.name
+                            );
+                            
+                            // Register with ControllerDiscovery using the correct name
+                            ControllerDiscovery.registerController(cls, controllerName);
+                            
                             // Track loaded controllers
                             this.loadedControllers.add(cls.name);
+                            
+                            console.log(`✅ Loaded and registered controller: ${controllerName}`);
                         });
                     } else {
                         console.warn(`⚠️  No controller classes found in ${path}`);

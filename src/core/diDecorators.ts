@@ -4,7 +4,7 @@
  */
 
 import 'reflect-metadata';
-import { serviceContainer, ServiceLifetime } from './serviceContainer.js';
+import { serviceContainer, ServiceLifetime } from './serviceContainer';
 
 /**
  * Injectable decorator - marks a class as available for dependency injection

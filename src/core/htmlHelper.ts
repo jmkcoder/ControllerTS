@@ -329,13 +329,16 @@ export class HtmlHelper {
 
     // Create submit handler
     this.submitHandler = async (event) => {
+      console.log('🚀 Form submit event intercepted!', event);
       const target = event.target as HTMLFormElement;
       const controller = target.getAttribute('mvc-controller');
       const action = target.getAttribute('mvc-action');
       
+      console.log('📋 Form attributes:', { controller, action, tagName: target.tagName });
       
       if (controller && action) {
         event.preventDefault();
+        console.log('✅ Form submission prevented, processing...');
         
         // Check if this is an object action
         const isObjectOnly = isObjectAction(controller, action);
@@ -361,6 +364,8 @@ export class HtmlHelper {
               // View actions use Action method (may redirect or render)
               result = await this.Action(controller, action, formDataObject);
             }
+            
+            console.log('📋 Action result received:', result);
             
             // Handle redirects
             if (result.redirected) {
@@ -409,6 +414,7 @@ export class HtmlHelper {
                     target.reset();
                   }
                 } else {
+                  console.log('🔍 Processing validation errors:', result);
                   
                   // Handle validation errors - display them next to form fields
                   if (result.errors && Array.isArray(result.errors)) {

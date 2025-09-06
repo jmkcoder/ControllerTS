@@ -50,7 +50,8 @@ export class ControllerManager {
     }
 
     // Use automatic parameter binding and validation
-    const result = await callActionWithBinding(controller, actionName, data);
+    const fullControllerName = controllerName.endsWith('Controller') ? controllerName : controllerName + 'Controller';
+    const result = await callActionWithBinding(controller, actionName, data, fullControllerName);
     
     // Validate the result
     const validation = ActionValidator.validateActionResult(controllerName, actionName, result);

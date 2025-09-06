@@ -23,6 +23,7 @@ export class Router {
    */
   setDefaultRoute(controller: string, action: string) {
     this.defaultRoute = { controller: controller.toLowerCase(), action };
+    console.log('📝 Default route set:', this.defaultRoute);
   }
 
   /**
@@ -84,13 +85,24 @@ export class Router {
   private getCleanPath(path: string): string {
     const cleaned = path.replace(/^\//, '');
     
+    console.log('🔍 getCleanPath() debug:', {
+      originalPath: path,
+      cleaned: cleaned,
+      hasDefaultRoute: !!this.defaultRoute,
+      defaultRoute: this.defaultRoute
+    });
+    
     // If it's root path and we have a default route configured
     if (!cleaned && this.defaultRoute) {
-      return `${this.defaultRoute.controller}/${this.defaultRoute.action}`;
+      const result = `${this.defaultRoute.controller}/${this.defaultRoute.action}`;
+      console.log('✅ Using default route:', result);
+      return result;
     }
     
     // If it's root path and no default route, fallback to 'home'
-    return cleaned || 'home';
+    const fallback = cleaned || 'home';
+    console.log('⚠️ Using fallback:', fallback);
+    return fallback;
   }
 
   /**
@@ -173,36 +185,73 @@ export class Router {
    * Execute route logic (shared between route() and routePath())
    */
   private async executeRoute(path: string, queryParamsObject: Record<string, string>) {
+    console.log('🔍 executeRoute() debug:', {
+      path: path,
+      registeredControllers: Array.from(this.registeredControllers.keys()),
+      registeredControllersCount: this.registeredControllers.size,
+      legacyRoutes: Object.keys(this.routes),
+      decoratorRoutes: Array.from(getRegisteredRoutes().keys()).slice(0, 10) // Show first 10 for readability
+    });
+    
+    console.log('🔍 All registered controllers detailed:', this.registeredControllers);
     
     // First, check decorator routes
     const decoratorRoutes = getRegisteredRoutes();
+    const currentMethod = this.currentRequestContext?.method || 'GET';
     
+    console.log('🔍 Router executeRoute debug:', {
+      path,
+      currentMethod,
+      hasRequestContext: !!this.currentRequestContext,
+      availableRoutes: Array.from(decoratorRoutes.keys()).slice(0, 5),
+      availableRoutesWithMethods: Array.from(decoratorRoutes.entries()).slice(0, 5).map(([key, value]) => ({
+        path: key,
+        method: value.method,
+        controller: value.controller.name,
+        action: value.action
+      }))
+    });
+    
+    // Try exact path and method match first
     if (decoratorRoutes.has(path)) {
       const routeInfo = decoratorRoutes.get(path)!;
-
-      const controller = this.createController(routeInfo.controller, queryParamsObject);
       
-      if (typeof controller[routeInfo.action] === 'function') {
-        // Execute the action and get result
-        let result: any;
-        const actionMethod = controller[routeInfo.action];
-        if (actionMethod.length > 0) {
-          result = await controller[routeInfo.action](queryParamsObject);
-        } else {
-          result = await controller[routeInfo.action]();
-        }
+      console.log('🔍 Found route for path, checking method:', {
+        path,
+        routeMethod: routeInfo.method,
+        currentMethod: currentMethod.toUpperCase(),
+        methodMatch: routeInfo.method === currentMethod.toUpperCase()
+      });
+      
+      // Check if HTTP method matches
+      if (routeInfo.method === currentMethod.toUpperCase()) {
+        console.log('✅ Method matched, executing action:', routeInfo.action);
+        const controller = this.createController(routeInfo.controller, queryParamsObject);
         
-        // Handle the result based on action type
-        await this.handleActionResult(
-          routeInfo.controller.name,
-          routeInfo.action,
-          result,
-          routeInfo.actionType
-        );
+        if (typeof controller[routeInfo.action] === 'function') {
+          // Execute the action and get result
+          let result: any;
+          const actionMethod = controller[routeInfo.action];
+          if (actionMethod.length > 0) {
+            result = await controller[routeInfo.action](queryParamsObject);
+          } else {
+            result = await controller[routeInfo.action]();
+          }
+          
+          // Handle the result based on action type
+          await this.handleActionResult(
+            routeInfo.controller.name,
+            routeInfo.action,
+            result,
+            routeInfo.actionType
+          );
+        } else {
+          await this.handle404();
+        }
+        return;
       } else {
-        await this.handle404();
+        console.log('❌ Method mismatch, continuing to controller/action pattern');
       }
-      return;
     }
 
     // Check manually registered routes (legacy support)
@@ -217,16 +266,31 @@ export class Router {
 
     // Try controller/action pattern (e.g., "home/index", "about/details")
     const parts = path.split('/');
+    console.log('🔍 Trying controller/action pattern:', {
+      path: path,
+      parts: parts,
+      partsLength: parts.length
+    });
+    
     if (parts.length >= 2) {
       const controllerName = parts[0].toLowerCase();
       const actionName = parts[1];
       
+      console.log('🔍 Looking for controller:', {
+        controllerName: controllerName,
+        actionName: actionName,
+        hasController: this.registeredControllers.has(controllerName)
+      });
+      
       const RegisteredControllerClass = this.registeredControllers.get(controllerName);
       if (RegisteredControllerClass) {
+        console.log('✅ Found controller class:', RegisteredControllerClass.name);
         const controller = this.createController(RegisteredControllerClass, queryParamsObject);
+        console.log('✅ Created controller instance:', typeof controller);
         
         // Check if the action exists on the controller
         if (typeof controller[actionName] === 'function') {
+          console.log('✅ Found action method:', actionName);
           // Execute action and handle result
           let result: any;
           const actionMethod = controller[actionName];
@@ -239,6 +303,7 @@ export class Router {
           // Handle result (default to view action for dynamic routes)
           await this.handleActionResult(RegisteredControllerClass.name, actionName, result, 'view');
         } else {
+          console.log('⚠️ Action method not found, trying default execute()');
           const result = await controller.execute();
           await this.handleActionResult(RegisteredControllerClass.name, 'execute', result, 'view');
         }

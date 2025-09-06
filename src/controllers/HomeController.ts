@@ -7,7 +7,6 @@ import { ModelValidator } from '../core/modelValidator';
 import { UserRegistrationModel } from '../models/sampleModels';
 
 @AutoRegister
-@Injectable
 @controller('home')
 export class HomeController extends Controller {
   
@@ -467,10 +466,9 @@ export class HomeController extends Controller {
   }
 
   // Handle user registration form submission with automatic model binding
-  @action('registerUser')
+  @objectAction('registerUser', 'POST')
   async registerUser(userModel: UserRegistrationModel): Promise<any> {
-    
-    if (!this.Model.IsValid) {
+    if (!this.ModelState.IsValid) {
       
       return {
         success: false,
@@ -507,7 +505,7 @@ export class HomeController extends Controller {
   }
 
   // Handle contact form submission
-  @action('contact')
+  @action('contact', 'POST')
   async submitContact(formData: any): Promise<any> {
     const { ContactFormModel } = await import('../models/sampleModels');
     
