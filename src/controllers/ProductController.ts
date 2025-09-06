@@ -8,15 +8,9 @@ import { LoggerService } from '../services/exampleServices';
 @AutoRegister
 @Injectable
 export class ProductController extends Controller {
-  private productService: ProductService;
-  private logger: LoggerService;
 
-  constructor() {
+  constructor(private productService: ProductService, private logger: LoggerService) {
     super();
-    
-    // Get services from DI container
-    this.productService = this.getService(ProductService);
-    this.logger = this.getService(LoggerService);
     this.logger.log('ProductController created with injected dependencies');
   }
   

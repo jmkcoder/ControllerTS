@@ -7,30 +7,14 @@ import { UserService, LoggerService, EmailService } from '../services/exampleSer
 @AutoRegister
 @Injectable
 export class HomeController extends Controller {
-  private userService: UserService;
-  private logger: LoggerService;
-  private emailService: EmailService;
   
-  constructor() {
+  constructor(
+    private userService: UserService,
+    private logger: LoggerService,
+    private emailService: EmailService
+  ) {
     super();
-    
-    // Get services from DI container or create fallback instances
-    try {
-      this.userService = this.getService(UserService);
-      this.logger = this.getService(LoggerService);
-      this.emailService = this.getService(EmailService);
-      this.logger.log('HomeController created with injected dependencies');
-    } catch (error) {
-      // Fallback if DI services aren't available yet
-      console.warn('DI services not available, creating fallback instances', error);
-      // Create logger first
-      const fallbackLogger = new LoggerService();
-      this.logger = fallbackLogger;
-      // Now use the logger to create other services
-      this.userService = new UserService(fallbackLogger);
-      this.emailService = new EmailService(fallbackLogger);
-      this.logger.log('HomeController created with fallback dependencies');
-    }
+    this.logger.log('HomeController created with constructor injection');
   }
   @route('home')
   @route('')  // Root route

@@ -185,16 +185,17 @@ export class Router {
 
     // If we have a request context with DI services, use those
     if (this.currentRequestContext?.services) {
-      // Try to create controller through DI container
+      // Always try to create controller through DI container first
       try {
         controller = this.currentRequestContext.services.getService(ControllerClass as any);
-      } catch {
-        // Fall back to direct instantiation
-        controller = new ControllerClass();
+      } catch (error) {
+        console.error(`Failed to create controller ${ControllerClass.name} through DI:`, error);
+        console.log('DI container details:', this.currentRequestContext.services);
+        throw new Error(`Cannot create controller ${ControllerClass.name} - DI container failed and no parameterless constructor available`);
       }
     } else {
-      // No request context, use direct instantiation
-      controller = new ControllerClass();
+      // No request context, this shouldn't happen in normal operation
+      throw new Error(`No request context available for creating controller ${ControllerClass.name}`);
     }
 
     // Set query parameters on the controller

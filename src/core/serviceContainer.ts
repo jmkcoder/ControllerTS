@@ -216,7 +216,94 @@ export class ServiceContainer {
                                   !constructorString.match(/constructor\(\s*\)/);
             
             if (hasParameters) {
-                // For known service types that depend on LoggerService, try to resolve manually
+                console.log(`Attempting manual dependency resolution for ${descriptor.implementationType.name}`);
+                
+                // Generic handling for all controllers and services with constructor dependencies
+                const constructorMatch = constructorString.match(/constructor\s*\(([^)]*)\)/);
+                if (constructorMatch && constructorMatch[1].trim()) {
+                    const paramString = constructorMatch[1];
+                    // Count parameters by splitting on commas
+                    const paramCount = paramString.split(',').filter((p: string) => p.trim()).length;
+                    
+                    console.log(`Found ${paramCount} constructor parameters for ${descriptor.implementationType.name}`);
+                    
+                    // Try to resolve dependencies by common service naming patterns
+                    const dependencies: any[] = [];
+                    const params = paramString.split(',').map((p: string) => p.trim());
+                    
+                    for (const param of params) {
+                        // Extract parameter name (before the colon if TypeScript, or just the name if compiled)
+                        const paramName = param.split(':')[0].trim();
+                        
+                        // Try to resolve dependency by matching parameter name to registered services
+                        let resolvedDependency = null;
+                        
+                        // Get all registered service names
+                        const registeredServices = Array.from(this.services.keys()).map(k => ({
+                            type: k,
+                            name: k.name
+                        }));
+                        
+                        // Strategy 1: Try exact name match (camelCase param -> PascalCase service)
+                        const pascalCaseServiceName = paramName.charAt(0).toUpperCase() + paramName.slice(1);
+                        const exactMatch = registeredServices.find(s => s.name === pascalCaseServiceName);
+                        if (exactMatch) {
+                            resolvedDependency = this.createInstance(this.services.get(exactMatch.type)!);
+                            console.log(`✓ Exact match: ${paramName} -> ${exactMatch.name}`);
+                        }
+                        
+                        // Strategy 2: Try service name pattern matching (remove "Service" suffix)
+                        if (!resolvedDependency) {
+                            const servicePattern = registeredServices.find(s => {
+                                const serviceName = s.name.toLowerCase();
+                                const paramNameLower = paramName.toLowerCase();
+                                
+                                // Check if service name (without "Service" suffix) matches parameter name
+                                const serviceBase = serviceName.replace('service', '');
+                                return serviceBase === paramNameLower || 
+                                       serviceName === paramNameLower + 'service' ||
+                                       serviceName.includes(paramNameLower);
+                            });
+                            
+                            if (servicePattern) {
+                                resolvedDependency = this.createInstance(this.services.get(servicePattern.type)!);
+                                console.log(`✓ Pattern match: ${paramName} -> ${servicePattern.name}`);
+                            }
+                        }
+                        
+                        // Strategy 3: Try partial name matching
+                        if (!resolvedDependency) {
+                            const partialMatch = registeredServices.find(s => {
+                                const serviceName = s.name.toLowerCase();
+                                const paramNameLower = paramName.toLowerCase();
+                                return serviceName.includes(paramNameLower) || paramNameLower.includes(serviceName.replace('service', ''));
+                            });
+                            
+                            if (partialMatch) {
+                                resolvedDependency = this.createInstance(this.services.get(partialMatch.type)!);
+                                console.log(`✓ Partial match: ${paramName} -> ${partialMatch.name}`);
+                            }
+                        }
+                        
+                        if (resolvedDependency) {
+                            dependencies.push(resolvedDependency);
+                        } else {
+                            console.warn(`✗ Could not resolve dependency: ${paramName}`);
+                            console.log(`Available services: ${registeredServices.map(s => s.name).join(', ')}`);
+                            dependencies.push(undefined);
+                        }
+                    }
+                    
+                    // Only proceed if we resolved all dependencies
+                    if (dependencies.length > 0 && dependencies.every((dep: any) => dep !== undefined)) {
+                        console.log(`✓ Creating ${descriptor.implementationType.name} with ${dependencies.length} resolved dependencies`);
+                        return new descriptor.implementationType(...dependencies);
+                    } else {
+                        console.error(`✗ Failed to resolve all dependencies for ${descriptor.implementationType.name}`);
+                    }
+                }
+                
+                // Fallback for known services that depend on LoggerService
                 if (['UserService', 'ProductService', 'EmailService'].includes(descriptor.implementationType.name)) {
                     // Find LoggerService by searching through registered services
                     for (const [serviceType, serviceDescriptor] of this.services.entries()) {
