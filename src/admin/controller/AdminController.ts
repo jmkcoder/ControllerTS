@@ -12,7 +12,6 @@ export class AdminController extends Controller {
     
     @action()  // Maps to /admin (base route + empty action)
     async dashboard() {
-        console.log('🔧 AdminController: Displaying admin dashboard');
         return await this.View('admin-dashboard', {
             title: 'Admin Dashboard',
             stats: {
@@ -25,7 +24,6 @@ export class AdminController extends Controller {
     
     @action('users')  // Maps to /admin/users
     async manageUsers() {
-        console.log('👥 AdminController: Managing users');
         return await this.View('admin-users', {
             title: 'User Management',
             users: Array.from({ length: 10 }, (_, i) => ({
@@ -39,7 +37,6 @@ export class AdminController extends Controller {
     
     @action('settings')  // Maps to /admin/settings
     async settings() {
-        console.log('⚙️ AdminController: System settings');
         return await this.View('admin-settings', {
             title: 'System Settings',
             settings: {

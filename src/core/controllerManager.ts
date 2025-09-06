@@ -1,17 +1,36 @@
 import type { Controller } from './controller';
 import { serviceContainer } from './serviceContainer';
+import { isObjectAction } from './decorators';
+import { ActionValidator } from './actionValidator';
 
 export class ControllerManager {
   private static controllers: Record<string, any> = {};
 
   static registerController(name: string, controllerClass: typeof Controller) {
+    // Store controllers with both original name and lowercase for case-insensitive lookup
     this.controllers[name] = controllerClass;
+    this.controllers[name.toLowerCase()] = controllerClass;
+  }
+
+  /**
+   * Get list of registered controller names for debugging
+   */
+  static getRegisteredControllerNames(): string[] {
+    // Return unique controller names (excluding lowercase duplicates)
+    return [...new Set(Object.keys(this.controllers).filter(name => name !== name.toLowerCase()))];
   }
 
   static async callAction(controllerName: string, actionName: string, data?: any): Promise<any> {
-    const ControllerClass = this.controllers[controllerName];
+    // Try exact match first, then case-insensitive
+    let ControllerClass = this.controllers[controllerName];
     if (!ControllerClass) {
-      throw new Error(`Controller '${controllerName}' not found`);
+      ControllerClass = this.controllers[controllerName.toLowerCase()];
+    }
+    
+    if (!ControllerClass) {
+      // Get unique controller names for error message
+      const availableControllers = [...new Set(Object.keys(this.controllers).filter(name => name !== name.toLowerCase()))];
+      throw new Error(`Controller '${controllerName}' not found. Available controllers: ${availableControllers.join(', ')}`);
     }
 
     // Try to get controller from DI container first, fallback to direct instantiation
@@ -26,10 +45,20 @@ export class ControllerManager {
     const action = controller[actionName];
     
     if (typeof action !== 'function') {
-      throw new Error(`Action '${actionName}' not found in controller '${controllerName}'`);
+      throw new Error(`Action '${actionName}' not found in controller '${controllerName}'. Available methods: ${Object.getOwnPropertyNames(Object.getPrototypeOf(controller)).filter(name => name !== 'constructor' && typeof controller[name] === 'function').join(', ')}`);
     }
 
-    return await action.call(controller, data);
+    // Execute the action
+    const result = await action.call(controller, data);
+    
+    // Validate the result
+    const validation = ActionValidator.validateActionResult(controllerName, actionName, result);
+    
+    if (!validation.isValid) {
+      throw new Error(`Action validation failed: ${validation.error}`);
+    }
+    
+    return result;
   }
 
   /**
@@ -61,8 +90,10 @@ export class ControllerManager {
     return new ControllerClass(...dependencies);
   }
 
-  // Helper method to make AJAX calls from templates
+  // Helper method to make AJAX calls from templates (deprecated - use HtmlHelper.Ajax instead)
   static async ajax(controllerName: string, actionName: string, data?: any): Promise<any> {
+    console.warn('⚠️  ControllerManager.ajax is deprecated. Use HtmlHelper.Ajax instead for better object action support.');
+    
     try {
       const result = await this.callAction(controllerName, actionName, data);
       return { success: true, data: result };

@@ -2,6 +2,7 @@ import type { Controller } from './controller';
 import { getRegisteredRoutes } from './decorators';
 import type { RequestContext } from './requestPipeline';
 import { ActionValidator } from './actionValidator';
+import { HtmlHelper } from './htmlHelper';
 
 export interface DefaultRouteConfig {
   controller: string;
@@ -279,6 +280,9 @@ export class Router {
   private renderJsonResponse(data: any): void {
     const jsonString = ActionValidator.processObjectActionResult(data);
     document.body.innerHTML = `<pre style="font-family: monospace; white-space: pre-wrap; margin: 20px;">${jsonString}</pre>`;
+    
+    // Reinitialize HtmlHelper after DOM content change
+    HtmlHelper.reinitialize();
   }
 
   /**
@@ -356,5 +360,8 @@ export class Router {
 
   private handle404() {
     document.body.innerHTML = '<h1>404 - Not Found</h1>';
+    
+    // Reinitialize HtmlHelper after DOM content change
+    HtmlHelper.reinitialize();
   }
 }

@@ -146,8 +146,16 @@ export function getRegisteredControllers(): Map<any, { baseRoute: string; action
  * Check if an action is object-only
  */
 export function isObjectAction(controllerName: string, actionName: string): boolean {
-  const actionKey = `${controllerName}.${actionName}`;
-  return actionTypeRegistry.get(actionKey) === 'object';
+  // Try both the raw controller name and the Controller-suffixed version
+  const normalizedName = controllerName.toLowerCase();
+  const controllerClassName = normalizedName.charAt(0).toUpperCase() + normalizedName.slice(1) + 'Controller';
+  
+  const actionKey1 = `${controllerName}.${actionName}`;
+  const actionKey2 = `${controllerClassName}.${actionName}`;
+  
+  const result = actionTypeRegistry.get(actionKey1) === 'object' || actionTypeRegistry.get(actionKey2) === 'object';
+  
+  return result;
 }
 
 /**
@@ -180,9 +188,6 @@ export function processControllerRoutes(): void {
       // Store action type for runtime validation
       const actionKey = `${controller.name}.${actionName}`;
       actionTypeRegistry.set(actionKey, actionMeta.actionType);
-      
-      const typeIndicator = actionMeta.actionType === 'object' ? '📦' : '🏠';
-      console.log(`🛣️  Registered route: ${actionMeta.method} /${fullRoute} → ${controller.name}.${actionName} ${typeIndicator}`);
     }
   }
 }

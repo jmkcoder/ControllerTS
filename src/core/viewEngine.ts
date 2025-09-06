@@ -1,5 +1,8 @@
 import * as nunjucks from 'nunjucks';
 
+// Import HtmlHelper for reinitialization after DOM updates
+import { HtmlHelper } from './htmlHelper';
+
 // Custom template cache for compiled HTML
 const templateCache: Record<string, string> = {};
 
@@ -128,6 +131,10 @@ export class ViewEngine {
       // Just replace the body content for partial templates
       document.body.innerHTML = html;
     }
+    
+    // IMPORTANT: Reinitialize HtmlHelper after DOM content changes
+    // This ensures MVC attributes work on the new content
+    HtmlHelper.reinitialize();
   }
 
   /**

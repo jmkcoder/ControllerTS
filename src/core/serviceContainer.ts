@@ -216,16 +216,10 @@ export class ServiceContainer {
                                   !constructorString.match(/constructor\(\s*\)/);
             
             if (hasParameters) {
-                console.log(`Attempting manual dependency resolution for ${descriptor.implementationType.name}`);
-                
                 // Generic handling for all controllers and services with constructor dependencies
                 const constructorMatch = constructorString.match(/constructor\s*\(([^)]*)\)/);
                 if (constructorMatch && constructorMatch[1].trim()) {
                     const paramString = constructorMatch[1];
-                    // Count parameters by splitting on commas
-                    const paramCount = paramString.split(',').filter((p: string) => p.trim()).length;
-                    
-                    console.log(`Found ${paramCount} constructor parameters for ${descriptor.implementationType.name}`);
                     
                     // Try to resolve dependencies by common service naming patterns
                     const dependencies: any[] = [];
@@ -249,7 +243,6 @@ export class ServiceContainer {
                         const exactMatch = registeredServices.find(s => s.name === pascalCaseServiceName);
                         if (exactMatch) {
                             resolvedDependency = this.createInstance(this.services.get(exactMatch.type)!);
-                            console.log(`✓ Exact match: ${paramName} -> ${exactMatch.name}`);
                         }
                         
                         // Strategy 2: Try service name pattern matching (remove "Service" suffix)
@@ -267,7 +260,6 @@ export class ServiceContainer {
                             
                             if (servicePattern) {
                                 resolvedDependency = this.createInstance(this.services.get(servicePattern.type)!);
-                                console.log(`✓ Pattern match: ${paramName} -> ${servicePattern.name}`);
                             }
                         }
                         
@@ -281,7 +273,6 @@ export class ServiceContainer {
                             
                             if (partialMatch) {
                                 resolvedDependency = this.createInstance(this.services.get(partialMatch.type)!);
-                                console.log(`✓ Partial match: ${paramName} -> ${partialMatch.name}`);
                             }
                         }
                         
@@ -296,7 +287,6 @@ export class ServiceContainer {
                     
                     // Only proceed if we resolved all dependencies
                     if (dependencies.length > 0 && dependencies.every((dep: any) => dep !== undefined)) {
-                        console.log(`✓ Creating ${descriptor.implementationType.name} with ${dependencies.length} resolved dependencies`);
                         return new descriptor.implementationType(...dependencies);
                     } else {
                         console.error(`✗ Failed to resolve all dependencies for ${descriptor.implementationType.name}`);

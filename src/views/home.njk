@@ -39,7 +39,7 @@
     <button mvc-controller="Home" 
             mvc-action="getJsonData" 
             mvc-result-target="results"
-            mvc-success-template='<div style="background: #d1ecf1; color: #0c5460; padding: 10px; border-radius: 4px; margin: 10px 0;"><strong>MVC Works! JSON Data:</strong><br><pre style="background: #e9ecef; padding: 10px; border-radius: 3px; margin: 10px 0;">{{result}}</pre></div>'
+            mvc-success-template='<div style="background: #d1ecf1; color: #0c5460; padding: 10px; border-radius: 4px; margin: 10px 0;"><strong>MVC Works! JSON Data:</strong><br><pre style="background: #e9ecef; padding: 10px; border-radius: 3px; margin: 10px 0;">{{ "{" }}{{ "{" }}result{{ "}" }}{{ "}" }}</pre></div>'
             style="padding: 10px 15px; margin: 5px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
       🧪 Test MVC Attributes (JSON Action)
     </button>
@@ -50,8 +50,8 @@
             mvc-data='{"source": "mvc-button"}' 
             mvc-result-target="results"
             mvc-loading-text="Calling action..."
-            mvc-success-template='<div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin: 10px 0;"><strong>Demo Action Result:</strong><br><pre style="background: #e9ecef; padding: 10px; border-radius: 3px; margin: 10px 0;">{{result}}</pre></div>'
-            mvc-error-template='<div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin: 10px 0;">Error: {{error}}</div>'
+            mvc-success-template='<div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin: 10px 0;"><strong>Demo Action Result:</strong><br><pre style="background: #e9ecef; padding: 10px; border-radius: 3px; margin: 10px 0;">{{ "{" }}{{ "{" }}result{{ "}" }}{{ "}" }}</pre></div>'
+            mvc-error-template='<div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin: 10px 0;">Error: {{ "{" }}{{ "{" }}error{{ "}" }}{{ "}" }}</div>'
             style="padding: 10px 15px; margin: 5px; background: #007acc; color: white; border: none; border-radius: 4px; cursor: pointer;">
       Call Demo Action (MVC Style)
     </button>
@@ -69,8 +69,8 @@
           mvc-action="submitForm" 
           mvc-result-target="results"
           mvc-reset-on-success="true"
-          mvc-success-template='<div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin: 10px 0;"><strong>Form Submit Success:</strong><br><pre style="background: #e9ecef; padding: 10px; border-radius: 3px; margin: 10px 0;">{{result}}</pre></div>'
-          mvc-error-template='<div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin: 10px 0;">Form Error: {{error}}</div>'
+          mvc-success-template='<div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin: 10px 0;"><strong>Form Submit Success:</strong><br><pre style="background: #e9ecef; padding: 10px; border-radius: 3px; margin: 10px 0;">{{ "{" }}{{ "{" }}result{{ "}" }}{{ "}" }}</pre></div>'
+          mvc-error-template='<div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin: 10px 0;">Form Error: {{ "{" }}{{ "{" }}error{{ "}" }}{{ "}" }}</div>'
           style="margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 4px;">
       <h3>Submit Form to Controller (MVC Style)</h3>
       <input type="text" name="username" placeholder="Enter username" style="padding: 8px; margin: 5px; width: 200px;" />
@@ -107,7 +107,7 @@
     <button mvc-controller="Home" 
             mvc-action="getJsonData" 
             mvc-result-target="results"
-            mvc-success-template='<div style="background: #d1ecf1; color: #0c5460; padding: 10px; border-radius: 4px; margin: 10px 0;"><strong>JSON Data:</strong><br><pre style="background: #e9ecef; padding: 10px; border-radius: 3px; margin: 10px 0;">{{result}}</pre></div>'
+            mvc-success-template='<div style="background: #d1ecf1; color: #0c5460; padding: 10px; border-radius: 4px; margin: 10px 0;"><strong>JSON Data:</strong><br><pre style="background: #e9ecef; padding: 10px; border-radius: 3px; margin: 10px 0;">{{ "{" }}{{ "{" }}result{{ "}" }}{{ "}" }}</pre></div>'
             style="padding: 10px 15px; margin: 5px; background: #20c997; color: white; border: none; border-radius: 4px; cursor: pointer;">
       Get JSON Data
     </button>
@@ -116,7 +116,7 @@
     <form mvc-controller="Home" 
           mvc-action="processAndRedirect" 
           mvc-result-target="results"
-          mvc-success-template='<div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin: 10px 0;"><strong>Process Result:</strong><br><pre style="background: #e9ecef; padding: 10px; border-radius: 3px; margin: 10px 0;">{{result}}</pre></div>'
+          mvc-success-template='<div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin: 10px 0;"><strong>Process Result:</strong><br><pre style="background: #e9ecef; padding: 10px; border-radius: 3px; margin: 10px 0;">{{ "{" }}{{ "{" }}result{{ "}" }}{{ "}" }}</pre></div>'
           style="margin: 20px 0; padding: 20px; border: 1px solid #6c757d; border-radius: 4px;">
       <h4>Conditional Redirect Test</h4>
       <label style="display: block; margin: 10px 0;">
@@ -175,86 +175,5 @@
     
     // Make it global for onclick
     window.testBasicFunction = testBasicFunction;
-    
-    // Optimized MVC initialization - no artificial delays
-    function initializeMVC() {
-      const mvcButtons = document.querySelectorAll('[mvc-controller]');
-      
-      // Quick debug info
-      const debugDiv = document.createElement('div');
-      debugDiv.style = 'position: fixed; top: 10px; right: 10px; background: #343a40; color: white; padding: 8px; border-radius: 4px; z-index: 1000; max-width: 280px; font-size: 11px;';
-      debugDiv.innerHTML = `
-        <strong>MVC Status:</strong><br>
-        Html Helper: ${!!window.Html ? '✅' : '❌'}<br>
-        MVC Elements: ${mvcButtons.length}<br>
-        <button onclick="this.parentElement.remove()" style="background: #dc3545; color: white; border: none; padding: 2px 4px; border-radius: 2px; margin-top: 3px; cursor: pointer; font-size: 10px;">×</button>
-      `;
-      document.body.appendChild(debugDiv);
-      
-      // Auto-remove debug info after 3 seconds
-      setTimeout(() => debugDiv.remove(), 3000);
-    }
-    
-    // Initialize immediately if DOM is ready, otherwise wait for DOMContentLoaded
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initializeMVC);
-    } else {
-      initializeMVC();
-    }
-      
-      // Test document-level click listener
-      document.addEventListener('click', (e) => {
-        // Check for MVC attributes
-        const target = e.target;
-        const controller = target.getAttribute('mvc-controller');
-        const action = target.getAttribute('mvc-action');
-        
-        if (controller && action) {
-          e.preventDefault();
-          
-          // Call the action
-          if (window.Html && window.Html.Action) {
-            const resultTarget = target.getAttribute('mvc-result-target');
-            
-            window.Html.Action(controller, action, {}).then(result => {
-              if (resultTarget) {
-                const resultsDiv = document.getElementById(resultTarget);
-                if (resultsDiv && result.success) {
-                  const template = target.getAttribute('mvc-success-template') || 
-                    `<div>Success: {{result}}</div>`;
-                  resultsDiv.innerHTML = template.replace('{{result}}', JSON.stringify(result.data, null, 2));
-                }
-              }
-            }).catch(err => {
-              console.error('Action error:', err);
-            });
-          }
-        }
-      });
-    
-    // Legacy button example (for demonstrating Html.Action API)
-    document.getElementById('legacy-btn').addEventListener('click', async function() {
-      const resultsDiv = document.getElementById('results');
-      resultsDiv.innerHTML = '<em>Calling legacy action...</em>';
-      
-      try {
-        const result = await window.Html.Action('Home', 'demoAction', { source: 'legacy-button' });
-        
-        if (result.success) {
-          resultsDiv.innerHTML = `
-            <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 4px; margin: 10px 0;">
-              <strong>Legacy Demo Action Result:</strong><br>
-              <pre style="background: #e9ecef; padding: 10px; border-radius: 3px; margin: 10px 0;">
-${JSON.stringify(result.data, null, 2)}
-              </pre>
-            </div>
-          `;
-        } else {
-          resultsDiv.innerHTML = `<span style="color: red;">Error: ${result.error}</span>`;
-        }
-      } catch (error) {
-        resultsDiv.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
-      }
-    });
   </script>
 {% endblock %}

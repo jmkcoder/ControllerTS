@@ -34,7 +34,6 @@ async function initializeApplication() {
     ControllerDiscovery.registerAllControllers();
     
     // Process controller routes from @controller/@action decorators
-    console.log('🛣️  Processing controller routes...');
     processControllerRoutes();
 
     // Initialize HtmlHelper for MVC attributes immediately
@@ -85,8 +84,11 @@ async function initializeApplication() {
     // Make services available globally for debugging
     (window as any).serviceContainer = serviceContainer;
     (window as any).app = app;
+    (window as any).router = router;
     
-    console.log('🎉 Application initialized with auto-discovered controllers!');
+    // Import and make ControllerManager available globally
+    const { ControllerManager } = await import('./core/controllerManager');
+    (window as any).ControllerManager = ControllerManager;
 }
 
 // Initialize the application

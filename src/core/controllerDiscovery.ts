@@ -74,8 +74,6 @@ export class ControllerDiscovery {
  * Add controller to global registry (used before ControllerDiscovery is ready)
  */
 function addToGlobalRegistry(controllerClass: any): void {
-    const name = controllerClass.name;
-    console.log(`📋 Pre-registering controller: ${name} (global registry now has ${globalControllerRegistry.length + 1} controllers)`);
     globalControllerRegistry.push(controllerClass);
 }
 

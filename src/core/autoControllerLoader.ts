@@ -25,8 +25,6 @@ export class AutoControllerLoader {
      * - src/features/user/controllers/*Controller.ts
      */
     static async loadAllControllers(): Promise<void> {
-        console.log('🔍 Auto-discovering controllers across entire src directory...');
-        
         try {
             // Use multiple glob patterns to find controllers anywhere in src
             // Vite requires literal strings, so we can't use a loop
@@ -41,25 +39,18 @@ export class AutoControllerLoader {
                 ...import.meta.glob('../**/controllers/*Controller.ts', { eager: false }),
             };
             
-            console.log(`📁 Found ${Object.keys(allControllerModules).length} potential controller files across src:`, Object.keys(allControllerModules));
-            
             // Load each controller module
             const loadPromises = Object.entries(allControllerModules).map(async ([path, importFn]) => {
                 try {
-                    console.log(`📦 Loading controller: ${path}`);
                     const module = await (importFn as () => Promise<any>)();
                     
                     // Find all exported classes that extend Controller
                     const controllerClasses = this.findControllerClasses(module, path);
                     
                     if (controllerClasses.length > 0) {
-                        console.log(`✅ Loaded ${controllerClasses.length} controller(s) from ${path}:`, 
-                                  controllerClasses.map(c => c.name));
-                        
                         // Register each controller with the DI container and track loaded controllers
                         controllerClasses.forEach(cls => {
                             // Register with DI container (as transient - new instance per request)
-                            console.log(`📦 Auto-registering controller with DI: ${cls.name}`);
                             serviceContainer.addTransient(cls);
                             
                             // Track loaded controllers
@@ -76,9 +67,6 @@ export class AutoControllerLoader {
             
             await Promise.all(loadPromises);
             
-            console.log(`🎉 Auto-discovery complete! Loaded ${this.loadedControllers.size} controllers:`, 
-                       Array.from(this.loadedControllers));
-            
         } catch (error) {
             console.error('❌ Failed to auto-discover controllers:', error);
             throw error; // Fail fast - don't hide the error
@@ -94,7 +82,6 @@ export class AutoControllerLoader {
         // Check all exports of the module
         for (const [exportName, exportValue] of Object.entries(module)) {
             if (this.isControllerClass(exportValue)) {
-                console.log(`🎯 Found controller class: ${exportName} in ${filePath}`);
                 controllerClasses.push(exportValue as typeof Controller);
             }
         }

@@ -10,19 +10,15 @@ import { RequestContext, Middleware } from './requestPipeline';
  */
 export class AuthenticationMiddleware implements Middleware {
     async handle(context: RequestContext, next: () => Promise<void>): Promise<void> {
-        console.log(`🔐 Auth: Checking authentication for ${context.path}`);
         
         // Simulate authentication check
         const isAuthenticated = true; // In real app, check JWT token, session, etc.
         
         if (!isAuthenticated && this.requiresAuth(context.path)) {
             // Redirect to login or throw error
-            console.log('❌ Auth: Access denied, redirecting to login');
             window.location.href = '/login';
             return; // Stop pipeline execution
         }
-        
-        console.log('✅ Auth: User authenticated, continuing...');
         
         // Continue to next middleware
         await next();
@@ -40,8 +36,7 @@ export class AuthenticationMiddleware implements Middleware {
 export class PerformanceMiddleware implements Middleware {
     async handle(context: RequestContext, next: () => Promise<void>): Promise<void> {
         const startTime = performance.now();
-        console.log(`⏱️  Perf: Starting request ${context.path}`);
-        
+
         try {
             // Continue to next middleware/controller
             await next();
@@ -49,7 +44,6 @@ export class PerformanceMiddleware implements Middleware {
             // This runs AFTER the request is processed
             const endTime = performance.now();
             const duration = endTime - startTime;
-            console.log(`✅ Perf: Request ${context.path} completed in ${duration.toFixed(2)}ms`);
             
             // Log performance metrics
             this.logPerformanceMetric(context.path, duration);
@@ -75,8 +69,6 @@ export class PerformanceMiddleware implements Middleware {
  */
 export class CorsMiddleware implements Middleware {
     async handle(context: RequestContext, next: () => Promise<void>): Promise<void> {
-        console.log(`🌐 CORS: Setting headers for ${context.path}`);
-        
         // In a real app, you'd set actual HTTP headers
         // For SPA, we'll just log the CORS handling
         const allowedOrigins = ['http://localhost:5173', 'https://myapp.com'];
@@ -96,8 +88,6 @@ export class CorsMiddleware implements Middleware {
  */
 export class ValidationMiddleware implements Middleware {
     async handle(context: RequestContext, next: () => Promise<void>): Promise<void> {
-        console.log(`🔍 Validation: Checking request ${context.path}`);
-        
         // Validate query parameters
         const errors = this.validateRequest(context);
         
@@ -106,8 +96,6 @@ export class ValidationMiddleware implements Middleware {
             // In a real app, return 400 Bad Request
             throw new Error(`Validation failed: ${errors.join(', ')}`);
         }
-        
-        console.log(`✅ Validation: Request is valid`);
         
         // Continue to next middleware
         await next();
@@ -142,13 +130,10 @@ export class CachingMiddleware implements Middleware {
         if (context.method === 'GET') {
             const cached = this.cache.get(cacheKey);
             if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
-                console.log(`🎯 Cache: Hit for ${context.path}`);
                 // In a real app, you'd return the cached response
                 return;
             }
         }
-        
-        console.log(`📝 Cache: Miss for ${context.path}, processing request`);
         
         // Continue to next middleware/controller
         await next();
@@ -159,7 +144,6 @@ export class CachingMiddleware implements Middleware {
                 data: 'response-data', // In real app, capture actual response
                 timestamp: Date.now()
             });
-            console.log(`💾 Cache: Stored response for ${context.path}`);
         }
     }
 }

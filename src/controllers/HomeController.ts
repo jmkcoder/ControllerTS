@@ -433,4 +433,15 @@ export class HomeController extends Controller {
   // async invalidViewApi(): Promise<void> {
   //   await this.View('views/home.njk', {}); // ❌ This will throw an error!
   // }
+
+  // Demo page for HtmlHelper with object actions
+  @action('htmlhelper-demo')
+  async htmlHelperDemo(): Promise<void> {
+    this.logger.log('HtmlHelper demo page accessed');
+    
+    await this.View('views/htmlhelper-demo.njk', {
+      title: 'HtmlHelper with Object Actions Demo',
+      subtitle: 'Demonstrating the updated HtmlHelper with support for @objectAction decorators'
+    });
+  }
 }

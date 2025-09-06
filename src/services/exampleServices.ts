@@ -102,10 +102,6 @@ export class EmailService {
 
     sendEmail(to: string, subject: string, body: string): boolean {
         this.logger.log(`Sending email to ${to}: ${subject}`);
-        // In a real app, this would send an actual email
-        console.log(`📧 Email sent to ${to}`);
-        console.log(`📧 Subject: ${subject}`);
-        console.log(`📧 Body: ${body}`);
         return true;
     }
 

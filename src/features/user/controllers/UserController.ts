@@ -12,7 +12,6 @@ export class UserController extends Controller {
     
     @action()  // Maps to /users
     async index() {
-        console.log('👥 UserController: Displaying all users');
         return await this.View('users', {
             title: 'User Management',
             users: [
@@ -24,7 +23,6 @@ export class UserController extends Controller {
     
     @action(':id')  // Maps to /users/:id
     async show(params: any) {
-        console.log('👤 UserController: Displaying user', params.id);
         return await this.View('user-detail', {
             title: 'User Details',
             user: { 
