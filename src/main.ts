@@ -5,16 +5,12 @@ import { ControllerDiscovery } from './core/controllerDiscovery';
 import { HtmlHelper } from './core/htmlHelper';
 import { Controller } from './core/controller';
 import { serviceContainer } from './core/serviceContainer';
-import { LoggerService, UserService, EmailService } from './services/exampleServices';
-import { ProductService } from './services/productService';
-import { ApiService } from './services/apiService';
 import { App } from './core/app';
 import { LoggingMiddleware, ErrorHandlingMiddleware, DIScopeMiddleware, RequestContextMiddleware } from './core/requestPipeline';
 import { AuthenticationMiddleware, PerformanceMiddleware, CorsMiddleware, ValidationMiddleware, CachingMiddleware, SecurityMiddleware } from './core/customMiddleware';
 import { AutoControllerLoader } from './core/autoControllerLoader';
 import { processControllerRoutes } from './core/decorators';
 import { registerActionParameters } from './core/parameterBinding';
-import { UserRegistrationModel, ContactFormModel } from './models/sampleModels';
 import { configureErrorPages } from './core/errorConfig';
 import { ConfigurationManager, configManager } from './core/configurationManager';
 import { EnvironmentManager } from './core/environmentManager';
@@ -34,17 +30,8 @@ async function initializeApplication() {
     
     // IMPORTANT: Register services using proper DI registration (no more factories needed!)
     // Register singleton services (shared across the entire application)
-    serviceContainer.addSingleton(LoggerService);
     serviceContainer.addSingleton(ViewEngine);
     serviceContainer.addSingleton(ConfigurationManager);
-
-    // Register scoped services (one instance per request)
-    serviceContainer.addScoped(UserService);
-    serviceContainer.addScoped(ProductService);
-    serviceContainer.addScoped(ApiService);
-
-    // Register transient services (new instance every time)
-    serviceContainer.addTransient(EmailService);
 
     await AutoControllerLoader.loadAllControllers();
 
@@ -54,11 +41,6 @@ async function initializeApplication() {
     
     // Process controller routes from @controller/@action decorators
     processControllerRoutes();
-
-    // WORKAROUND: Manually register parameter types since webpack minification affects reflection metadata
-    // Register strongly typed parameters for actions that need automatic model binding
-    registerActionParameters('HomeController', 'registerUser', [UserRegistrationModel]);
-    registerActionParameters('HomeController', 'submitContact', [ContactFormModel]);
 
     // Configure error pages (no need to touch core router!)
     // Use configuration manager to determine error page setup
@@ -100,7 +82,7 @@ async function initializeApplication() {
     const router = new Router();
 
     // Configure default route (instead of using @route('') attribute)
-    router.setDefaultRoute('home', 'execute');
+    router.setDefaultRoute('home', 'index');
 
     // Set router instance for controller redirects
     Controller.setRouter(router);

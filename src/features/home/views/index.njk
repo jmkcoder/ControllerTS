@@ -1,0 +1,222 @@
+{% extends "shared/_base.njk" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12 space-y-24">
+  <!-- Hero Section -->
+  <div class="text-center space-y-8" data-animate="animate-fade-in">
+    <div class="relative">
+      <h1 class="text-4xl md:text-6xl font-bold bg-gradient-to-br from-primary to-primary/80 bg-clip-text text-transparent mb-6">
+        {{ title }}
+      </h1>
+      <div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/10 opacity-30 blur-3xl scale-150 -z-10"></div>
+    </div>
+    
+    <div class="space-y-4">
+      <p class="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto" data-animate="animate-fade-in">
+        {{ subtitle }}
+      </p>
+      <p class="text-lg text-muted-foreground max-w-4xl mx-auto leading-relaxed" data-animate="animate-fade-in">
+        {{ description }}
+      </p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center" data-animate="animate-fade-in">
+      <a href="/home/demo" class="inline-flex items-center justify-center rounded-md bg-primary px-8 py-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+        <span class="material-icons mr-2">rocket_launch</span>
+        View Live Demo
+      </a>
+      <a href="/products" class="inline-flex items-center justify-center rounded-md border border-input bg-background px-8 py-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+        <span class="material-icons mr-2">shopping_bag</span>
+        Explore Products
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="relative">
+    <div class="absolute inset-0 bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5 rounded-2xl"></div>
+    <div class="relative bg-white/50 backdrop-blur-sm rounded-2xl border border-border/50 p-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-foreground mb-3">Platform Statistics</h2>
+        <p class="text-muted-foreground max-w-2xl mx-auto">Real-time metrics showcasing the growth and impact of our framework</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="group relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200/50 p-6 transition-all duration-300 hover:shadow-lg hover:scale-105" data-animate="animate-slide-in-left">
+          <div class="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full -translate-y-10 translate-x-10"></div>
+          <div class="relative z-10 text-center space-y-4">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-500/10 rounded-xl mb-2">
+              <span class="material-icons text-blue-600 icon-lg">group</span>
+            </div>
+            <div class="space-y-1">
+              <div class="text-3xl font-bold text-blue-700">{{ stats.totalUsers | number_format }}</div>
+              <div class="text-sm font-medium text-blue-600/80">Active Users</div>
+              <div class="text-xs text-blue-500/60">+12% this month</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200/50 p-6 transition-all duration-300 hover:shadow-lg hover:scale-105" data-animate="animate-fade-in">
+          <div class="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full -translate-y-10 translate-x-10"></div>
+          <div class="relative z-10 text-center space-y-4">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-500/10 rounded-xl mb-2">
+              <span class="material-icons text-emerald-600 icon-lg">inventory_2</span>
+            </div>
+            <div class="space-y-1">
+              <div class="text-3xl font-bold text-emerald-700">{{ stats.totalProducts }}</div>
+              <div class="text-sm font-medium text-emerald-600/80">Products Available</div>
+              <div class="text-xs text-emerald-500/60">+5 new this week</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="group relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-50 to-purple-100/50 border border-purple-200/50 p-6 transition-all duration-300 hover:shadow-lg hover:scale-105" data-animate="animate-fade-in">
+          <div class="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full -translate-y-10 translate-x-10"></div>
+          <div class="relative z-10 text-center space-y-4">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-purple-500/10 rounded-xl mb-2">
+              <span class="material-icons text-purple-600 icon-lg">analytics</span>
+            </div>
+            <div class="space-y-1">
+              <div class="text-3xl font-bold text-purple-700">{{ stats.totalOrders | number_format }}</div>
+              <div class="text-sm font-medium text-purple-600/80">Orders Processed</div>
+              <div class="text-xs text-purple-500/60">+18% growth</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="group relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200/50 p-6 transition-all duration-300 hover:shadow-lg hover:scale-105" data-animate="animate-slide-in-right">
+          <div class="absolute top-0 right-0 w-20 h-20 bg-amber-500/10 rounded-full -translate-y-10 translate-x-10"></div>
+          <div class="relative z-10 text-center space-y-4">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-amber-500/10 rounded-xl mb-2">
+              <span class="material-icons text-amber-600 icon-lg">attach_money</span>
+            </div>
+            <div class="space-y-1">
+              <div class="text-3xl font-bold text-amber-700">${{ stats.revenue | number_format(2) }}</div>
+              <div class="text-sm font-medium text-amber-600/80">Revenue Generated</div>
+              <div class="text-xs text-amber-500/60">+25% YoY</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="space-y-16" data-animate="animate-fade-in">
+    <div class="text-center space-y-4">
+      <h2 class="text-4xl font-bold bg-gradient-to-br from-primary to-primary/80 bg-clip-text text-transparent">Framework Features</h2>
+      <p class="text-lg text-muted-foreground max-w-3xl mx-auto">
+        Discover the powerful features that make ControllerTS the perfect choice for modern web development
+      </p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {% for feature in features %}
+      <div class="group relative overflow-hidden rounded-xl border bg-card p-8 shadow-sm transition-all duration-300 hover:shadow-lg hover:scale-105" data-animate="animate-fade-in">
+        <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div class="relative z-10 space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="material-icons text-primary icon-xl group-hover:scale-110 transition-transform duration-300">{{ feature.icon }}</span>
+            <div class="h-1 w-12 bg-gradient-to-r from-primary to-primary/60 rounded-full"></div>
+          </div>
+          <div class="space-y-2">
+            <h3 class="text-xl font-semibold text-card-foreground group-hover:text-primary transition-colors duration-300">{{ feature.title }}</h3>
+            <p class="text-muted-foreground leading-relaxed">{{ feature.description }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- CTA Section -->
+  <div class="relative overflow-hidden" data-animate="animate-fade-in">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0">
+      <div class="absolute inset-0 bg-gradient-to-r from-primary via-primary/95 to-primary"></div>
+      <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="7" cy="7" r="7"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+    </div>
+    
+    <div class="relative z-10 rounded-2xl border border-primary/20 backdrop-blur-sm">
+      <div class="px-8 py-16 text-center">
+        <div class="max-w-4xl mx-auto space-y-8">
+          <!-- Icon and Badge -->
+          <div class="flex flex-col items-center space-y-4">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20">
+              <span class="material-icons text-white icon-xl">rocket_launch</span>
+            </div>
+            <div class="inline-flex items-center px-4 py-2 bg-white/10 rounded-full border border-white/20 backdrop-blur-sm">
+              <span class="material-icons text-white icon-sm mr-2">auto_awesome</span>
+              <span class="text-white/90 text-sm font-medium">Get Started Today</span>
+            </div>
+          </div>
+
+          <!-- Heading and Description -->
+          <div class="space-y-6">
+            <h3 class="text-4xl md:text-5xl font-bold text-white leading-tight">
+              Ready to Build Something
+              <span class="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent"> Amazing?</span>
+            </h3>
+            <p class="text-xl text-white/80 max-w-2xl mx-auto leading-relaxed">
+              Join thousands of developers who are already building modern web applications with ControllerTS. 
+              Experience the power of TypeScript MVC architecture.
+            </p>
+          </div>
+
+          <!-- Stats Row -->
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-8 py-6">
+            <div class="text-center">
+              <div class="text-2xl font-bold text-white">1K+</div>
+              <div class="text-white/70 text-sm">Developers</div>
+            </div>
+            <div class="hidden sm:block w-px h-8 bg-white/20"></div>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-white">500+</div>
+              <div class="text-white/70 text-sm">Projects</div>
+            </div>
+            <div class="hidden sm:block w-px h-8 bg-white/20"></div>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-white">24/7</div>
+              <div class="text-white/70 text-sm">Support</div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="/products" class="group inline-flex items-center justify-center rounded-xl bg-white px-8 py-4 text-base font-semibold text-primary shadow-lg transition-all duration-300 hover:bg-white/95 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary">
+              <span class="material-icons mr-3 group-hover:scale-110 transition-transform duration-300">shopping_bag</span>
+              Explore Products
+              <span class="material-icons ml-2 group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
+            </a>
+            <a href="/contact" class="group inline-flex items-center justify-center rounded-xl border-2 border-white/30 bg-white/10 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/20 hover:border-white/50 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary">
+              <span class="material-icons mr-3 group-hover:scale-110 transition-transform duration-300">chat</span>
+              Get in Touch
+            </a>
+          </div>
+
+          <!-- Trust Indicators -->
+          <div class="pt-8 border-t border-white/10">
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-6 text-white/60">
+              <div class="flex items-center gap-2">
+                <span class="material-icons icon-sm">verified</span>
+                <span class="text-sm">Production Ready</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="material-icons icon-sm">security</span>
+                <span class="text-sm">Enterprise Security</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="material-icons icon-sm">support</span>
+                <span class="text-sm">24/7 Support</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

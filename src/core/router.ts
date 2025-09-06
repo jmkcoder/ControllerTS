@@ -40,6 +40,71 @@ export class Router {
     this.pipelineHandler = handler;
   }
 
+  /**
+   * Match a URL path against a route pattern and extract parameters
+   * @param pattern Route pattern like "category/:category" or ":id"
+   * @param path Actual URL path like "category/electronics" or "123"
+   * @returns Object with matched parameters or null if no match
+   */
+  private matchRoute(pattern: string, path: string): Record<string, string> | null {
+    const patternParts = pattern.split('/');
+    const pathParts = path.split('/');
+    
+    // Must have same number of parts
+    if (patternParts.length !== pathParts.length) {
+      return null;
+    }
+    
+    const params: Record<string, string> = {};
+    
+    for (let i = 0; i < patternParts.length; i++) {
+      const patternPart = patternParts[i];
+      const pathPart = pathParts[i];
+      
+      if (patternPart.startsWith(':')) {
+        // This is a parameter
+        const paramName = patternPart.slice(1);
+        params[paramName] = pathPart;
+      } else if (patternPart !== pathPart) {
+        // Static part doesn't match
+        return null;
+      }
+    }
+    
+    return params;
+  }
+
+  /**
+   * Find matching route from registered routes, handling parameters
+   */
+  private findMatchingRoute(path: string, method: string): { 
+    routeInfo: any; 
+    routeParams: Record<string, string>; 
+    fullRoutePath: string 
+  } | null {
+    const decoratorRoutes = getRegisteredRoutes();
+    
+    // First try exact match
+    if (decoratorRoutes.has(path)) {
+      const routeInfo = decoratorRoutes.get(path)!;
+      if (routeInfo.method === method.toUpperCase()) {
+        return { routeInfo, routeParams: {}, fullRoutePath: path };
+      }
+    }
+    
+    // Try parameterized routes
+    for (const [routePath, routeInfo] of decoratorRoutes.entries()) {
+      if (routeInfo.method === method.toUpperCase()) {
+        const routeParams = this.matchRoute(routePath, path);
+        if (routeParams !== null) {
+          return { routeInfo, routeParams, fullRoutePath: routePath };
+        }
+      }
+    }
+    
+    return null;
+  }
+
   addRoute(path: string, controller: typeof Controller) {
     this.routes[path] = controller;
   }
@@ -212,46 +277,47 @@ export class Router {
       }))
     });
     
-    // Try exact path and method match first
-    if (decoratorRoutes.has(path)) {
-      const routeInfo = decoratorRoutes.get(path)!;
+    // Try to find a matching route (including parameterized routes)
+    const matchResult = this.findMatchingRoute(path, currentMethod);
+    
+    if (matchResult) {
+      const { routeInfo, routeParams, fullRoutePath } = matchResult;
       
-      console.log('🔍 Found route for path, checking method:', {
-        path,
-        routeMethod: routeInfo.method,
-        currentMethod: currentMethod.toUpperCase(),
-        methodMatch: routeInfo.method === currentMethod.toUpperCase()
+      console.log('✅ Found matching route:', {
+        fullRoutePath,
+        routeParams,
+        controller: routeInfo.controller.name,
+        action: routeInfo.action
       });
       
-      // Check if HTTP method matches
-      if (routeInfo.method === currentMethod.toUpperCase()) {
-        console.log('✅ Method matched, executing action:', routeInfo.action);
-        const controller = this.createController(routeInfo.controller, queryParamsObject);
-        
-        if (typeof controller[routeInfo.action] === 'function') {
-          // Execute the action and get result
-          let result: any;
-          const actionMethod = controller[routeInfo.action];
-          if (actionMethod.length > 0) {
-            result = await controller[routeInfo.action](queryParamsObject);
-          } else {
-            result = await controller[routeInfo.action]();
-          }
-          
-          // Handle the result based on action type
-          await this.handleActionResult(
-            routeInfo.controller.name,
-            routeInfo.action,
-            result,
-            routeInfo.actionType
-          );
-        } else {
-          await this.handle404();
-        }
-        return;
-      } else {
-        console.log('❌ Method mismatch, continuing to controller/action pattern');
+      const controller = this.createController(routeInfo.controller, queryParamsObject);
+      
+      // Set route parameters on the controller
+      if (controller.setRouteParams && Object.keys(routeParams).length > 0) {
+        controller.setRouteParams(routeParams);
       }
+      
+      if (typeof controller[routeInfo.action] === 'function') {
+        // Execute the action and get result
+        let result: any;
+        const actionMethod = controller[routeInfo.action];
+        if (actionMethod.length > 0) {
+          result = await controller[routeInfo.action](queryParamsObject);
+        } else {
+          result = await controller[routeInfo.action]();
+        }
+        
+        // Handle the result based on action type
+        await this.handleActionResult(
+          routeInfo.controller.name,
+          routeInfo.action,
+          result,
+          routeInfo.actionType
+        );
+      } else {
+        await this.handle404();
+      }
+      return;
     }
 
     // Check manually registered routes (legacy support)

@@ -1,0 +1,286 @@
+{% extends "shared/_base.njk" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-16">
+  <!-- Hero Section -->
+  <section class="text-center mb-20">
+    <div class="space-y-6">
+      <h1 class="text-5xl md:text-6xl font-bold tracking-tight">{{ title }}</h1>
+      <p class="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+        Get in touch with our team. We'd love to hear from you and help with any questions you have about ControllerTS.
+      </p>
+    </div>
+  </section>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+    <!-- Contact Form -->
+    <div class="relative">
+      <div class="rounded-2xl border bg-card shadow-sm overflow-hidden">
+        <div class="border-b border-border bg-muted/50 px-6 py-4">
+          <h2 class="text-2xl font-semibold flex items-center gap-3">
+            <span class="material-icons text-primary icon-lg">edit_note</span>
+            Send us a Message
+          </h2>
+          <p class="text-muted-foreground mt-2">Fill out the form below and we'll get back to you within 24 hours.</p>
+        </div>
+        
+        <div class="p-6">
+          {% if errors %}
+          <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="material-icons text-red-500 icon-md">error</span>
+              <strong class="text-red-800">Please fix the following errors:</strong>
+            </div>
+            <ul class="space-y-2 text-red-700">
+              {% for error in errors %}
+              <li class="flex items-center gap-2">
+                <span class="material-icons text-red-400 icon-sm">circle</span>
+                {{ error }}
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <form action="/contact/submit" method="POST" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label for="name" class="text-sm font-medium flex items-center gap-2">
+                  <span class="material-icons text-muted-foreground icon-sm">person</span>
+                  Full Name *
+                </label>
+                <input 
+                  type="text" 
+                  id="name" 
+                  name="name" 
+                  value="{{ formData.name or '' }}" 
+                  class="flex h-12 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2{% if modelState and modelState.hasError('name') %} border-red-500 focus-visible:ring-red-500{% endif %}" 
+                  placeholder="Enter your full name"
+                >
+                {% if modelState and modelState.hasError('name') %}
+                <div class="text-red-600 text-sm flex items-center gap-2">
+                  <span class="material-icons text-red-500 icon-sm">error</span>
+                  {{ modelState.getError('name') }}
+                </div>
+                {% endif %}
+              </div>
+              <div class="space-y-2">
+                <label for="email" class="text-sm font-medium flex items-center gap-2">
+                  <span class="material-icons text-muted-foreground icon-sm">email</span>
+                  Email Address *
+                </label>
+                <input 
+                  type="email" 
+                  id="email" 
+                  name="email" 
+                  value="{{ formData.email or '' }}" 
+                  class="flex h-12 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2{% if modelState and modelState.hasError('email') %} border-red-500 focus-visible:ring-red-500{% endif %}" 
+                  placeholder="your.email@example.com"
+                >
+                {% if modelState and modelState.hasError('email') %}
+                <div class="text-red-600 text-sm flex items-center gap-2">
+                  <span class="material-icons text-red-500 icon-sm">error</span>
+                  {{ modelState.getError('email') }}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label for="subject" class="text-sm font-medium flex items-center gap-2">
+                <span class="material-icons text-muted-foreground icon-sm">subject</span>
+                Subject *
+              </label>
+              <input 
+                type="text" 
+                id="subject" 
+                name="subject" 
+                value="{{ formData.subject or '' }}" 
+                class="flex h-12 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2{% if modelState and modelState.hasError('subject') %} border-red-500 focus-visible:ring-red-500{% endif %}" 
+                placeholder="How can we help you?"
+              >
+              {% if modelState and modelState.hasError('subject') %}
+              <div class="text-red-600 text-sm flex items-center gap-2">
+                <span class="material-icons text-red-500 icon-sm">error</span>
+                {{ modelState.getError('subject') }}
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="space-y-2">
+              <label for="message" class="text-sm font-medium flex items-center gap-2">
+                <span class="material-icons text-muted-foreground icon-sm">message</span>
+                Message *
+              </label>
+              <textarea 
+                id="message" 
+                name="message" 
+                rows="6" 
+                class="flex min-h-[150px] w-full rounded-xl border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none{% if modelState and modelState.hasError('message') %} border-red-500 focus-visible:ring-red-500{% endif %}" 
+                placeholder="Tell us more about your inquiry, feedback, or how we can assist you..."
+              >{{ formData.message or '' }}</textarea>
+              {% if modelState and modelState.hasError('message') %}
+              <div class="text-red-600 text-sm flex items-center gap-2">
+                <span class="material-icons text-red-500 icon-sm">error</span>
+                {{ modelState.getError('message') }}
+              </div>
+              {% endif %}
+            </div>
+
+            <button type="submit" class="w-full inline-flex items-center justify-center rounded-xl bg-primary px-8 py-4 text-base font-semibold text-primary-foreground shadow-lg transition-all duration-300 hover:bg-primary/90 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <span class="material-icons mr-3">send</span>
+              Send Message
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="space-y-8">
+      <!-- Contact Details -->
+      <div class="rounded-2xl border bg-card shadow-sm overflow-hidden">
+        <div class="border-b border-border bg-muted/50 px-6 py-4">
+          <h3 class="text-xl font-semibold flex items-center gap-3">
+            <span class="material-icons text-primary icon-lg">contact_phone</span>
+            Contact Information
+          </h3>
+        </div>
+        <div class="p-6 space-y-6">
+          <div class="flex items-start gap-4 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
+            <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+              <span class="material-icons text-primary icon-lg">location_on</span>
+            </div>
+            <div class="flex-1">
+              <h4 class="font-semibold text-lg mb-1">Our Address</h4>
+              <p class="text-muted-foreground leading-relaxed">{{ contactInfo.address }}</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
+            <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+              <span class="material-icons text-primary icon-lg">phone</span>
+            </div>
+            <div class="flex-1">
+              <h4 class="font-semibold text-lg mb-1">Phone Number</h4>
+              <p class="text-muted-foreground">{{ contactInfo.phone }}</p>
+              <p class="text-sm text-muted-foreground">Available during business hours</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
+            <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+              <span class="material-icons text-primary icon-lg">email</span>
+            </div>
+            <div class="flex-1">
+              <h4 class="font-semibold text-lg mb-1">Email Address</h4>
+              <p class="text-muted-foreground">{{ contactInfo.email }}</p>
+              <p class="text-sm text-muted-foreground">We respond within 24 hours</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
+            <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+              <span class="material-icons text-primary icon-lg">schedule</span>
+            </div>
+            <div class="flex-1">
+              <h4 class="font-semibold text-lg mb-1">Business Hours</h4>
+              <p class="text-muted-foreground">{{ contactInfo.hours }}</p>
+              <p class="text-sm text-muted-foreground">Support available 24/7</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="rounded-2xl border bg-card shadow-sm overflow-hidden">
+        <div class="border-b border-border bg-muted/50 px-6 py-4">
+          <h3 class="text-xl font-semibold flex items-center gap-3">
+            <span class="material-icons text-primary icon-lg">flash_on</span>
+            Quick Actions
+          </h3>
+        </div>
+        <div class="p-6 space-y-4">
+          <a href="/contact/team" class="w-full inline-flex items-center justify-center rounded-xl border-2 border-input bg-background px-6 py-3 text-sm font-semibold shadow-sm transition-all duration-300 hover:bg-accent hover:text-accent-foreground hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <span class="material-icons mr-3">group</span>
+            Meet Our Team
+          </a>
+          <a href="/products" class="w-full inline-flex items-center justify-center rounded-xl border-2 border-input bg-background px-6 py-3 text-sm font-semibold shadow-sm transition-all duration-300 hover:bg-accent hover:text-accent-foreground hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <span class="material-icons mr-3">inventory_2</span>
+            View Products
+          </a>
+          <a href="/home/demo" class="w-full inline-flex items-center justify-center rounded-xl border-2 border-input bg-background px-6 py-3 text-sm font-semibold shadow-sm transition-all duration-300 hover:bg-accent hover:text-accent-foreground hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <span class="material-icons mr-3">play_circle</span>
+            Try Demo
+          </a>
+        </div>
+      </div>
+
+      <!-- Team Preview -->
+      <div class="rounded-2xl border bg-card shadow-sm overflow-hidden">
+        <div class="border-b border-border bg-muted/50 px-6 py-4">
+          <h3 class="text-xl font-semibold flex items-center gap-3">
+            <span class="material-icons text-primary icon-lg">group</span>
+            Our Team
+          </h3>
+          <p class="text-muted-foreground mt-2">Meet some of the people behind ControllerTS</p>
+        </div>
+        <div class="p-6">
+          <div class="space-y-6">
+            {% for member in teamMembers.slice(0, 2) %}
+            <div class="flex items-start gap-4 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
+              <div class="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center text-primary-foreground font-bold text-lg shadow-sm">
+                {{ member.name[0] }}
+              </div>
+              <div class="flex-1">
+                <h4 class="font-semibold text-lg">{{ member.name }}</h4>
+                <p class="text-sm text-muted-foreground mb-1">{{ member.role }}</p>
+                <p class="text-xs text-muted-foreground">Available for consultation</p>
+              </div>
+            </div>
+            {% endfor %}
+            {% if teamMembers.length > 2 %}
+            <div class="pt-4 border-t border-border">
+              <a href="/contact/team" class="inline-flex items-center gap-2 text-primary font-medium hover:gap-3 transition-all">
+                <span class="material-icons icon-sm">group</span>
+                View all {{ teamMembers.length }} team members
+                <span class="material-icons icon-sm">arrow_forward</span>
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Call to Action Section -->
+  <section class="mt-20">
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/90 p-12 text-center">
+      <div class="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -translate-y-24 translate-x-24"></div>
+      <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-16 -translate-x-16"></div>
+      <div class="relative z-10 space-y-6">
+        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <span class="material-icons text-white text-3xl">handshake</span>
+        </div>
+        <h3 class="text-3xl md:text-4xl font-bold text-white mb-6">Ready to Start Building?</h3>
+        <p class="text-primary-foreground/90 text-lg max-w-2xl mx-auto leading-relaxed">
+          Join thousands of developers who are already using ControllerTS to build amazing web applications.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+          <a href="/products" class="inline-flex items-center justify-center rounded-xl bg-white text-primary px-8 py-4 text-base font-semibold shadow-lg transition-all duration-300 hover:bg-white/90 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+            <span class="material-icons mr-3">inventory_2</span>
+            Explore Products
+          </a>
+          <a href="/home/demo" class="inline-flex items-center justify-center rounded-xl border-2 border-white text-white px-8 py-4 text-base font-semibold transition-all duration-300 hover:bg-white hover:text-primary hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+            <span class="material-icons mr-3">play_circle</span>
+            Try Demo
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,205 @@
+{% extends "shared/_base.njk" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12 space-y-12">
+  <!-- Hero Header Section -->
+  <div class="text-center space-y-8" data-animate="animate-fade-in">
+    <div class="relative">
+      <h1 class="text-4xl md:text-6xl font-bold bg-gradient-to-br from-primary to-primary/80 bg-clip-text text-transparent mb-6">
+        {{ title }}
+      </h1>
+      <div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/10 opacity-30 blur-3xl scale-150 -z-10"></div>
+    </div>
+    
+    <div class="space-y-4">
+      <p class="text-xl text-muted-foreground max-w-3xl mx-auto">
+        {% if searchQuery %}
+          <span class="inline-flex items-center gap-2">
+            <span class="material-icons icon-md text-primary">search</span>
+            {{ totalProducts }} result{{ 's' if totalProducts != 1 else '' }} found for "{{ searchQuery }}"
+          </span>
+        {% elif selectedCategory %}
+          <span class="inline-flex items-center gap-2">
+            <span class="material-icons icon-md text-primary">category</span>
+            Showing {{ totalProducts }} {{ selectedCategory | lower }} product{{ 's' if totalProducts != 1 else '' }}
+          </span>
+        {% else %}
+          <span class="inline-flex items-center gap-2">
+            <span class="material-icons icon-md text-primary">store</span>
+            Discover our curated collection of {{ totalProducts }} premium products
+          </span>
+        {% endif %}
+      </p>
+    </div>
+
+    <!-- Search Section -->
+    <div class="max-w-2xl mx-auto" data-animate="animate-fade-in">
+      <form action="/products/search" method="GET" class="flex flex-col sm:flex-row gap-4">
+        <div class="relative flex-1">
+          <span class="material-icons absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground icon-md">search</span>
+          <input 
+            type="text" 
+            name="q" 
+            value="{{ searchQuery or '' }}" 
+            placeholder="Search for products, categories, or brands..." 
+            class="w-full h-12 pl-12 pr-4 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
+          >
+        </div>
+        <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-primary px-8 py-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <span class="material-icons mr-2">search</span>
+          Search
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Content Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <!-- Sidebar -->
+    <div class="lg:col-span-1" data-animate="animate-slide-in-left">
+      <div class="rounded-xl border bg-card shadow-sm sticky top-8">
+        <div class="p-6 border-b border-border">
+          <h3 class="text-lg font-semibold flex items-center gap-3">
+            <span class="material-icons text-primary icon-lg">category</span>
+            Categories
+          </h3>
+        </div>
+        <div class="p-4 space-y-2">
+          <a href="/products" class="flex items-center justify-between p-3 rounded-lg transition-all duration-200 hover:bg-accent group {% if not selectedCategory %}bg-accent{% endif %}">
+            <div class="flex items-center gap-3">
+              <span class="material-icons text-muted-foreground group-hover:text-primary icon-md">store</span>
+              <span class="font-medium">All Products</span>
+            </div>
+            <span class="inline-flex items-center justify-center min-w-[24px] h-6 bg-primary/10 text-primary px-2 rounded-full text-sm font-medium">{{ totalProducts }}</span>
+          </a>
+          {% for category in categories %}
+          <a 
+            href="/products/category/{{ category.id }}" 
+            class="flex items-center justify-between p-3 rounded-lg transition-all duration-200 hover:bg-accent group {% if selectedCategory == category.name %}bg-accent{% endif %}"
+          >
+            <div class="flex items-center gap-3">
+              <span class="material-icons text-muted-foreground group-hover:text-primary icon-md">
+                {% if category.name == 'Electronics' %}devices{% elif category.name == 'Furniture' %}chair{% elif category.name == 'Photography' %}camera_alt{% elif category.name == 'Appliances' %}kitchen{% else %}folder{% endif %}
+              </span>
+              <span class="font-medium">{{ category.name }}</span>
+            </div>
+            <span class="inline-flex items-center justify-center min-w-[24px] h-6 bg-primary/10 text-primary px-2 rounded-full text-sm font-medium">{{ category.count }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="lg:col-span-3">
+      {% if products.length > 0 %}
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {% for product in products %}
+        <div class="group relative overflow-hidden rounded-xl border bg-card shadow-sm transition-all duration-300 hover:shadow-lg hover:scale-105" data-animate="animate-fade-in">
+          <!-- Product Image -->
+          <div class="aspect-square bg-gradient-to-br from-muted/50 to-muted/30 relative overflow-hidden">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span class="material-icons text-muted-foreground/50 transition-all duration-300 group-hover:scale-110" style="font-size: 4rem;">
+                {% if product.category == 'Electronics' %}headphones{% elif product.category == 'Furniture' %}chair{% elif product.category == 'Photography' %}camera_alt{% elif product.category == 'Appliances' %}coffee_maker{% else %}inventory_2{% endif %}
+              </span>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <!-- Category Badge -->
+            <div class="absolute top-4 left-4">
+              <span class="inline-flex items-center px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-muted-foreground">
+                {{ product.category }}
+              </span>
+            </div>
+
+            <!-- Stock Status -->
+            <div class="absolute top-4 right-4">
+              <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium {% if product.inStock %}bg-emerald-100 text-emerald-700{% else %}bg-red-100 text-red-700{% endif %}">
+                <span class="material-icons" style="font-size: 14px;">
+                  {% if product.inStock %}check_circle{% else %}cancel{% endif %}
+                </span>
+                {% if product.inStock %}In Stock{% else %}Out of Stock{% endif %}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Product Content -->
+          <div class="p-6 space-y-4">
+            <div class="space-y-2">
+              <div class="flex items-start justify-between gap-2">
+                <h3 class="font-semibold text-lg leading-tight group-hover:text-primary transition-colors duration-300 line-clamp-2">
+                  {{ product.name }}
+                </h3>
+                <div class="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-full shrink-0">
+                  <span class="material-icons text-amber-500" style="font-size: 16px;">star</span>
+                  <span class="text-sm font-medium text-amber-700">{{ product.rating }}</span>
+                </div>
+              </div>
+              
+              <p class="text-muted-foreground text-sm leading-relaxed line-clamp-2">
+                {{ product.description }}
+              </p>
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div class="space-y-1">
+                <div class="text-2xl font-bold bg-gradient-to-br from-primary to-primary/80 bg-clip-text text-transparent">
+                  ${{ product.price | number_format(2) }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex gap-3">
+              <a href="/products/{{ product.id }}" class="flex-1 inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <span class="material-icons mr-2" style="font-size: 18px;">visibility</span>
+                View Details
+              </a>
+              {% if product.inStock %}
+              <button class="inline-flex items-center justify-center rounded-lg border border-input bg-background px-3 py-2.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <span class="material-icons" style="font-size: 18px;">shopping_cart</span>
+              </button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Load More Section -->
+      <div class="text-center mt-12" data-animate="animate-fade-in">
+        <div class="inline-flex items-center justify-center rounded-xl border border-input bg-background px-8 py-4 text-sm font-medium shadow-sm transition-all duration-300 hover:bg-accent hover:text-accent-foreground hover:scale-105 cursor-pointer">
+          <span class="material-icons mr-2">expand_more</span>
+          Load More Products
+        </div>
+      </div>
+      {% else %}
+      <!-- Empty State -->
+      <div class="text-center py-20" data-animate="animate-fade-in">
+        <div class="max-w-md mx-auto space-y-6">
+          <div class="w-24 h-24 mx-auto bg-muted/30 rounded-full flex items-center justify-center">
+            <span class="material-icons text-muted-foreground icon-2xl">search_off</span>
+          </div>
+          <div class="space-y-4">
+            <h3 class="text-2xl font-semibold text-muted-foreground">No products found</h3>
+            <p class="text-muted-foreground leading-relaxed">
+              {% if searchQuery %}
+                We couldn't find any products matching your search. Try adjusting your search terms or browse by category.
+              {% else %}
+                There are no products in this category yet. Check back soon for new arrivals!
+              {% endif %}
+            </p>
+          </div>
+          <a href="/products" class="inline-flex items-center justify-center rounded-xl bg-primary px-8 py-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <span class="material-icons mr-2">store</span>
+            View All Products
+          </a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -20,8 +20,28 @@ function getNunjucksEnvironment(): nunjucks.Environment {
         const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const cacheBuster = isDevelopment ? `?t=${Date.now()}&r=${Math.random()}` : '';
         
+        console.log('🔍 ViewEngine: Raw template name requested:', name);
+        
+        // Handle the new feature-based template structure and relative paths
+        let templateUrl = `/src/${name}`;
+        
+        // Handle relative paths for template inheritance
+        if (name.startsWith('shared/') || name.startsWith('../shared/')) {
+          templateUrl = `/src/shared/${name.replace(/^(\.\.\/)*shared\//, '')}`;
+        } else if (!name.startsWith('features/') && !name.startsWith('src/')) {
+          // If it's a relative path, prepend src/
+          templateUrl = `/src/${name}`;
+        }
+        
+        // Add .njk extension if not present
+        if (!templateUrl.endsWith('.njk')) {
+          templateUrl += '.njk';
+        }
+        
+        console.log('🔍 ViewEngine: Resolved template URL:', templateUrl);
+        
         const xhr = new XMLHttpRequest();
-        xhr.open('GET', `/src/${name}${cacheBuster}`, false); // Synchronous request
+        xhr.open('GET', `${templateUrl}${cacheBuster}`, false); // Synchronous request
         
         if (isDevelopment) {
           xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -33,9 +53,11 @@ function getNunjucksEnvironment(): nunjucks.Environment {
           xhr.send();
           
           if (xhr.status !== 200) {
+            console.error('❌ ViewEngine: Template not found:', templateUrl, 'Status:', xhr.status);
             throw new Error(`Template not found: ${name} (status: ${xhr.status})`);
           }
           
+          console.log('✅ ViewEngine: Successfully loaded template:', templateUrl);
           return {
             src: xhr.responseText,
             path: name,
@@ -68,6 +90,32 @@ function getNunjucksEnvironment(): nunjucks.Environment {
     
     nunjucksEnv.addFilter('dump', (obj: any, indent: number = 2) => {
       return JSON.stringify(obj, null, indent);
+    });
+
+    // Number formatting filters
+    nunjucksEnv.addFilter('number_format', (num: number, decimals: number = 0) => {
+      if (typeof num !== 'number') return num;
+      return new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      }).format(num);
+    });
+
+    nunjucksEnv.addFilter('currency', (num: number, currency: string = 'USD') => {
+      if (typeof num !== 'number') return num;
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency
+      }).format(num);
+    });
+
+    nunjucksEnv.addFilter('percentage', (num: number, decimals: number = 1) => {
+      if (typeof num !== 'number') return num;
+      return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      }).format(num / 100);
     });
   }
   

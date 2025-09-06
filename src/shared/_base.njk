@@ -1,17 +1,167 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>{% block title %}Default Title{% endblock %}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ControllerTS Demo{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96%;
+            --secondary-foreground: 222.2 84% 4.9%;
+            --muted: 210 40% 96%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96%;
+            --accent-foreground: 222.2 84% 4.9%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 222.2 84% 4.9%;
+            --radius: 0.5rem;
+        }
+
+        /* Enhanced animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        .animate-slide-in-left { animation: slideInLeft 0.6s ease-out forwards; }
+        .animate-slide-in-right { animation: slideInRight 0.6s ease-out forwards; }
+        .animate-pulse { animation: pulse 2s infinite; }
+        
+        /* Enhanced transitions */
+        .transition-all { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .transition-transform { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .transition-colors { transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Enhanced shadows */
+        .shadow-soft { box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04); }
+        .shadow-medium { box-shadow: 0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        .shadow-strong { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+
+        /* Gradient backgrounds */
+        .bg-gradient-primary { background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%); }
+        .bg-gradient-secondary { background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(var(--muted)) 100%); }
+        .bg-gradient-accent { background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--secondary)) 100%); }
+
+        /* Enhanced navbar */
+        .navbar-glass {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.8);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        /* Material Icons styling */
+        .material-icons, .material-symbols-outlined {
+            font-family: 'Material Icons', 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .icon-sm { font-size: 18px; }
+        .icon-md { font-size: 24px; }
+        .icon-lg { font-size: 32px; }
+        .icon-xl { font-size: 48px; }
+        .icon-2xl { font-size: 64px; }
+    </style>
 </head>
-<body>
-  <header>
-    <h1>My App</h1>
-  </header>
-  <main>
-    {% block content %}{% endblock %}
-  </main>
-  <footer>
-    <small>&copy; 2025</small>
-  </footer>
+<body class="min-h-screen bg-background text-foreground">
+    <nav class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div class="container flex h-14 max-w-screen-2xl items-center">
+            <div class="mr-4 hidden md:flex">
+                <a href="/" class="mr-6 flex items-center space-x-2">
+                    <span class="hidden font-bold sm:inline-block bg-gradient-to-br from-primary to-primary/80 bg-clip-text text-transparent">ControllerTS</span>
+                </a>
+                <nav class="flex items-center gap-6 text-sm">
+                    <a href="/" class="transition-colors hover:text-foreground/80 text-foreground/60">Home</a>
+                    <a href="/about" class="transition-colors hover:text-foreground/80 text-foreground/60">About</a>
+                    <a href="/products" class="transition-colors hover:text-foreground/80 text-foreground/60">Products</a>
+                    <a href="/contact" class="transition-colors hover:text-foreground/80 text-foreground/60">Contact</a>
+                </nav>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="border-t bg-gradient-to-br from-secondary/50 to-muted/50">
+        <div class="container flex flex-col items-center justify-between gap-4 py-10 md:h-24 md:flex-row md:py-0">
+            <div class="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
+                <p class="text-center text-sm leading-loose text-muted-foreground md:text-left">
+                    Built by ControllerTS Team. The source code is available on GitHub.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Enhanced navigation with history API
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('a');
+            if (target && target.hostname === window.location.hostname && !target.hasAttribute('download')) {
+                e.preventDefault();
+                window.history.pushState({}, '', target.href);
+                window.dispatchEvent(new PopStateEvent('popstate'));
+            }
+        });
+
+        // Add page load animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate elements on page load
+            const elements = document.querySelectorAll('[data-animate]');
+            elements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.classList.add(el.dataset.animate);
+                }, index * 100);
+            });
+
+            // Initialize MVC HTML Helper for form and AJAX handling
+            if (window.Html && window.Html.initializeMvcAttributes) {
+                window.Html.initializeMvcAttributes();
+                console.log('✅ HTML Helper MVC attributes initialized');
+            } else {
+                console.warn('⚠️ HTML Helper not found - MVC attributes may not work');
+            }
+        });
+    </script>
 </body>
 </html>

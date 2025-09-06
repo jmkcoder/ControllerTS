@@ -9,6 +9,49 @@ export class HtmlHelper {
   private static submitHandler: ((event: Event) => void) | null = null;
 
   /**
+   * Processes template strings to handle various encoding formats from Nunjucks
+   * @param template The template string containing placeholders
+   * @param resultText The text to replace {{result}} with
+   * @param errorText The text to replace {{error}} with (optional)
+   * @returns Processed template with placeholders replaced
+   */
+  private static processTemplate(template: string, resultText?: string, errorText?: string): string {
+    let processed = template;
+
+    // Handle the new @result and @error format (recommended)
+    if (resultText !== undefined) {
+      processed = processed.replace(/@result/g, resultText);
+    }
+    if (errorText !== undefined) {
+      processed = processed.replace(/@error/g, errorText);
+    }
+
+    // Handle Nunjucks escaped patterns for backwards compatibility
+    processed = processed
+      .replace(/\{\{"\{"}\}\{\{"\{"}\}result\{\{"\}"}\}\{\{"\}"}\}/g, '{{result}}')  // {{"{"}}{{"{"}}result{{"}"}}{{"}"}
+      .replace(/\{\{"\{"}\}\{\{"\{"}\}error\{\{"\}"}\}\{\{"\}"}\}/g, '{{error}}');   // {{"{"}}{{"{"}}error{{"}"}}{{"}"}
+
+    // Handle HTML entity encoded patterns for backwards compatibility
+    processed = processed
+      .replace(/&\{&\{result&\}&\}/g, '{{result}}')  // &{&{result&}&}
+      .replace(/&#123;&#123;result&#125;&#125;/g, '{{result}}')  // &#123;&#123;result&#125;&#125;
+      .replace(/&lt;&lt;result&gt;&gt;/g, '{{result}}')  // &lt;&lt;result&gt;&gt;
+      .replace(/&\{&\{error&\}&\}/g, '{{error}}')  // &{&{error&}&}
+      .replace(/&#123;&#123;error&#125;&#125;/g, '{{error}}')  // &#123;&#123;error&#125;&#125;
+      .replace(/&lt;&lt;error&gt;&gt;/g, '{{error}}');  // &lt;&lt;error&gt;&gt;
+
+    // Replace legacy {{result}} and {{error}} placeholders for backwards compatibility
+    if (resultText !== undefined) {
+      processed = processed.replace(/\{\{result\}\}/g, resultText);
+    }
+    if (errorText !== undefined) {
+      processed = processed.replace(/\{\{error\}\}/g, errorText);
+    }
+
+    return processed;
+  }
+
+  /**
    * MVC-style Html.Action equivalent for calling controller actions
    * Handles both view actions and object actions with proper validation
    */
@@ -227,10 +270,10 @@ export class HtmlHelper {
         }
       }
       
-      // Add loading state
-      const originalText = target.textContent;
+      // Add loading state - preserve HTML structure for icons
+      const originalHTML = target.innerHTML;
       const loadingText = target.getAttribute('mvc-loading-text') || 'Loading...';
-      target.textContent = loadingText;
+      target.innerHTML = loadingText;
       target.setAttribute('disabled', 'true');
       
       try {
@@ -266,28 +309,16 @@ export class HtmlHelper {
                 JSON.stringify(result.data, null, 2) : 
                 (typeof result.data === 'object' ? JSON.stringify(result.data, null, 2) : String(result.data));
               
-              // More robust template replacement - handle HTML entities but preserve structure
-              let processedTemplate = template;
-              
-              // Decode only the specific placeholders, not the entire HTML
-              processedTemplate = processedTemplate
-                .replace(/&\{&\{result&\}&\}/g, '{{result}}')  // Decode &{&{result&}&}
-                .replace(/&#123;&#123;result&#125;&#125;/g, '{{result}}')  // Decode &#123;&#123;result&#125;&#125;
-                .replace(/&lt;&lt;result&gt;&gt;/g, '{{result}}')  // Decode &lt;&lt;result&gt;&gt;
-                .replace(/\{\{result\}\}/g, resultText);  // Replace the placeholder
+              // Process template with centralized logic
+              const processedTemplate = HtmlHelper.processTemplate(template, resultText);
               
               targetElement.innerHTML = processedTemplate;
             } else {
               const errorTemplate = target.getAttribute('mvc-error-template') || 
                 `<div class="alert alert-error">Error: {{error}}</div>`;
               
-              // More robust template replacement for errors - handle HTML entities but preserve structure
-              let processedErrorTemplate = errorTemplate;
-              processedErrorTemplate = processedErrorTemplate
-                .replace(/&\{&\{error&\}&\}/g, '{{error}}')  // Decode &{&{error&}&}
-                .replace(/&#123;&#123;error&#125;&#125;/g, '{{error}}')  // Decode &#123;&#123;error&#125;&#125;
-                .replace(/&lt;&lt;error&gt;&gt;/g, '{{error}}')  // Decode &lt;&lt;error&gt;&gt;
-                .replace(/\{\{error\}\}/g, result.error || 'Unknown error');
+              // Process template with centralized logic
+              const processedErrorTemplate = HtmlHelper.processTemplate(errorTemplate, undefined, result.error || 'Unknown error');
               
               targetElement.innerHTML = processedErrorTemplate;
             }
@@ -315,26 +346,21 @@ export class HtmlHelper {
             const errorTemplate = target.getAttribute('mvc-error-template') || 
               `<div class="alert alert-error">Error: {{error}}</div>`;
             
-            // More robust template replacement for button click errors - decode HTML entities first
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = errorTemplate;
-            const decodedErrorTemplate = tempDiv.textContent || tempDiv.innerText || errorTemplate;
-            
-            let processedErrorTemplate = decodedErrorTemplate;
+            // Process template with centralized logic
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            processedErrorTemplate = processedErrorTemplate.replace(/\{\{error\}\}/g, errorMessage);
+            const processedErrorTemplate = HtmlHelper.processTemplate(errorTemplate, undefined, errorMessage);
             
             targetElement.innerHTML = processedErrorTemplate;
           }
         }
       } finally {
         // Restore button state
-        target.textContent = originalText;
+        target.innerHTML = originalHTML;
         target.removeAttribute('disabled');
       }
     };
 
-    // Create submit handler
+    // Create submit handler - intercept ALL form submissions
     this.submitHandler = async (event) => {
       console.log('🚀 Form submit event intercepted!', event);
       const target = event.target as HTMLFormElement;
@@ -343,12 +369,47 @@ export class HtmlHelper {
       
       console.log('📋 Form attributes:', { controller, action, tagName: target.tagName });
       
-      if (controller && action) {
+      // If no MVC attributes, try to infer from form action or URL
+      let finalController = controller;
+      let finalAction = action;
+      
+      if (!controller || !action) {
+        // Try to extract from form action attribute
+        const formAction = target.getAttribute('action');
+        if (formAction && formAction !== '#' && formAction !== '') {
+          const actionParts = formAction.split('/').filter(part => part.length > 0);
+          if (actionParts.length >= 2) {
+            finalController = actionParts[0];
+            finalAction = actionParts[1];
+          } else if (actionParts.length === 1) {
+            // Could be just action, infer controller from current route
+            const currentPath = window.location.pathname;
+            const currentParts = currentPath.split('/').filter(part => part.length > 0);
+            finalController = currentParts[0] || 'home';
+            finalAction = actionParts[0];
+          }
+        } else {
+          // No form action, infer from current URL
+          const currentPath = window.location.pathname;
+          const currentParts = currentPath.split('/').filter(part => part.length > 0);
+          finalController = currentParts[0] || 'home';
+          finalAction = currentParts[1] || 'index';
+          
+          // For submission, typically want a POST action
+          if (finalAction === 'index') {
+            finalAction = 'submit';
+          }
+        }
+      }
+      
+      console.log('🎯 Final route determined:', { finalController, finalAction });
+      
+      if (finalController && finalAction) {
         event.preventDefault();
         console.log('✅ Form submission prevented, processing...');
         
         // Check if this is an object action
-        const isObjectOnly = isObjectAction(controller, action);
+        const isObjectOnly = isObjectAction(finalController, finalAction);
         
         // Get form data
         const formData = new FormData(target);
@@ -356,190 +417,206 @@ export class HtmlHelper {
         
         // Add loading state to submit button
         const submitButton = target.querySelector('button[type="submit"]') as HTMLButtonElement;
+        let originalHTML = '';
         if (submitButton) {
-          const originalText = submitButton.textContent;
-          submitButton.textContent = 'Submitting...';
+          originalHTML = submitButton.innerHTML || '';
+          submitButton.innerHTML = 'Submitting...';
           submitButton.disabled = true;
+        }
+        
+        try {
+          // Use appropriate method based on action type
+          let result: any;
+          if (isObjectOnly) {
+            // Object actions should use Ajax method
+            result = await this.Ajax(finalController, finalAction, formDataObject);
+          } else {
+            // View actions use Action method (may redirect or render)
+            result = await this.Action(finalController, finalAction, formDataObject);
+          }
           
-          try {
-            // Use appropriate method based on action type
-            let result: any;
-            if (isObjectOnly) {
-              // Object actions should use Ajax method
-              result = await this.Ajax(controller, action, formDataObject);
-            } else {
-              // View actions use Action method (may redirect or render)
-              result = await this.Action(controller, action, formDataObject);
+          console.log('📋 Action result received:', result);
+          
+          // Handle redirects
+          if (result.redirected) {
+            return; // Don't update UI for redirects
+          }
+          
+          // Handle result - look for result target or create one
+          let resultTarget = target.getAttribute('mvc-result-target');
+          let targetElement: HTMLElement | null = null;
+          
+          if (resultTarget) {
+            targetElement = document.getElementById(resultTarget);
+          } else {
+            // Look for common result containers
+            targetElement = target.querySelector('.validation-summary') as HTMLElement ||
+                           target.querySelector('.alert') as HTMLElement ||
+                           target.parentElement?.querySelector('.validation-summary') as HTMLElement ||
+                           target.parentElement?.querySelector('.alert') as HTMLElement;
+            
+            // If no result container found, create one at the top of the form
+            if (!targetElement) {
+              targetElement = document.createElement('div');
+              targetElement.className = 'validation-summary';
+              targetElement.id = 'form-validation-result';
+              target.insertBefore(targetElement, target.firstChild);
             }
+          }
+          
+          if (targetElement) {
+            // Always show the result target element
+            targetElement.classList.remove('d-none');
+            targetElement.style.display = 'block';
             
-            console.log('📋 Action result received:', result);
-            
-            // Handle redirects
-            if (result.redirected) {
-              return; // Don't update UI for redirects
-            }
-            
-            // Handle result
-            const resultTarget = target.getAttribute('mvc-result-target');
-            if (resultTarget) {
-              const targetElement = document.getElementById(resultTarget);
-              if (targetElement) {
-                // Always show the result target element
-                targetElement.classList.remove('d-none');
-                targetElement.style.display = 'block';
+            if (result.success) {
+              // Clear any existing validation errors on success
+              target.querySelectorAll('.invalid-feedback').forEach((el: Element) => {
+                el.remove();
+              });
+              target.querySelectorAll('.is-invalid').forEach((el: Element) => {
+                el.classList.remove('is-invalid');
+              });
+              target.querySelectorAll('.border-red-500').forEach((el: Element) => {
+                el.classList.remove('border-red-500', 'focus:border-red-500');
+              });
+              
+              const template = target.getAttribute('mvc-success-template') || 
+                (isObjectOnly ? 
+                  `<div class="alert alert-success">Success: <pre>{{result}}</pre></div>` :
+                  `<div class="alert alert-success">Success: {{result}}</div>`);
+              
+              const resultText = isObjectOnly ? 
+                JSON.stringify(result.data, null, 2) : 
+                (typeof result.data === 'object' ? JSON.stringify(result.data, null, 2) : String(result.data));
                 
-                if (result.success) {
-                  // Clear any existing validation errors on success
-                  target.querySelectorAll('.invalid-feedback').forEach((el: Element) => {
-                    el.remove();
-                  });
-                  target.querySelectorAll('.is-invalid').forEach((el: Element) => {
-                    el.classList.remove('is-invalid');
-                  });
-                  
-                  const template = target.getAttribute('mvc-success-template') || 
-                    (isObjectOnly ? 
-                      `<div class="alert alert-success">Success: <pre>{{result}}</pre></div>` :
-                      `<div class="alert alert-success">Success: {{result}}</div>`);
-                  
-                  const resultText = isObjectOnly ? 
-                    JSON.stringify(result.data, null, 2) : 
-                    (typeof result.data === 'object' ? JSON.stringify(result.data, null, 2) : String(result.data));
-                    
-                  // More robust template replacement for forms - handle HTML entities but preserve structure
-                  let processedTemplate = template;
-                  processedTemplate = processedTemplate
-                    .replace(/&\{&\{result&\}&\}/g, '{{result}}')  // Decode &{&{result&}&}
-                    .replace(/&#123;&#123;result&#125;&#125;/g, '{{result}}')  // Decode &#123;&#123;result&#125;&#125;
-                    .replace(/&lt;&lt;result&gt;&gt;/g, '{{result}}')  // Decode &lt;&lt;result&gt;&gt;
-                    .replace(/\{\{result\}\}/g, resultText);
-                  
-                  targetElement.innerHTML = processedTemplate;
-                  
-                  // Reset form on success if specified
-                  if (target.getAttribute('mvc-reset-on-success') === 'true') {
-                    target.reset();
-                  }
-                } else {
-                  console.log('🔍 Processing validation errors:', result);
-                  
-                  // Handle validation errors - display them next to form fields
-                  if (result.errors && Array.isArray(result.errors)) {
-                    
-                    // Clear any existing validation messages
-                    target.querySelectorAll('.invalid-feedback').forEach((el: Element) => {
-                      el.remove();
-                    });
-                    
-                    // Clear any existing invalid classes
-                    target.querySelectorAll('.is-invalid').forEach((el: Element) => {
-                      el.classList.remove('is-invalid');
-                    });
-                    
-                    // Add validation errors to each field
-                    result.errors.forEach((error: any) => {
-                      const fieldName = error.property || error.field;
-                      const errorMessage = error.message || error.error;
-                      
-                      if (fieldName && errorMessage) {
-                        // Find the input field
-                        const inputElement = target.querySelector(`[name="${fieldName}"]`) as HTMLElement;
-                        
-                        if (inputElement) {
-                          // Add Bootstrap invalid class
-                          inputElement.classList.add('is-invalid');
-                          
-                          // Create validation message element
-                          const validationDiv = document.createElement('div');
-                          validationDiv.className = 'invalid-feedback d-block';
-                          validationDiv.textContent = errorMessage;
-                          validationDiv.style.display = 'block';
-                          validationDiv.style.color = '#dc3545';
-                          validationDiv.style.fontSize = '0.875em';
-                          validationDiv.style.marginTop = '0.25rem';
-                          
-                          // Find the best place to insert the validation message
-                          let insertAfter = inputElement;
-                          
-                          // Check if there's a form-text element after the input
-                          const nextSibling = inputElement.nextElementSibling;
-                          if (nextSibling && nextSibling.classList.contains('form-text')) {
-                            insertAfter = nextSibling as HTMLElement;
-                          }
-                          
-                          // Insert validation message after the input (or form-text)
-                          insertAfter.parentNode?.insertBefore(validationDiv, insertAfter.nextSibling);
-                        } else {
-                          console.warn('⚠️ Could not find input element for field:', fieldName);
-                        }
-                      }
-                    });
-                    
-                    // Update result target with general error message
-                    const errorTemplate = target.getAttribute('mvc-error-template') || 
-                      `<div class="alert alert-danger"><h4>Please correct the following errors:</h4><p>{{error}}</p></div>`;
-                    
-                    let processedErrorTemplate = errorTemplate;
-                    processedErrorTemplate = processedErrorTemplate
-                      .replace(/&\{&\{error&\}&\}/g, '{{error}}')  // Decode &{&{error&}&}
-                      .replace(/&#123;&#123;error&#125;&#125;/g, '{{error}}')  // Decode &#123;&#123;error&#125;&#125;
-                      .replace(/&lt;&lt;error&gt;&gt;/g, '{{error}}')  // Decode &lt;&lt;error&gt;&gt;
-                      .replace(/\{\{error\}\}/g, result.message || 'Validation failed');
-                    
-                    targetElement.innerHTML = processedErrorTemplate;
-                  } else {
-                    // General error handling
-                    const errorTemplate = target.getAttribute('mvc-error-template') || 
-                      `<div class="alert alert-danger">Error: {{error}}</div>`;
-                    
-                    let processedErrorTemplate = errorTemplate;
-                    processedErrorTemplate = processedErrorTemplate
-                      .replace(/&\{&\{error&\}&\}/g, '{{error}}')  // Decode &{&{error&}&}
-                      .replace(/&#123;&#123;error&#125;&#125;/g, '{{error}}')  // Decode &#123;&#123;error&#125;&#125;
-                      .replace(/&lt;&lt;error&gt;&gt;/g, '{{error}}')  // Decode &lt;&lt;error&gt;&gt;
-                      .replace(/\{\{error\}\}/g, result.error || 'Unknown error');
-                    
-                    targetElement.innerHTML = processedErrorTemplate;
-                  }
-                }
+              // Process template with centralized logic
+              const processedTemplate = HtmlHelper.processTemplate(template, resultText);
+              
+              targetElement.innerHTML = processedTemplate;
+              
+              // Reset form on success if specified or by default
+              if (target.getAttribute('mvc-reset-on-success') !== 'false') {
+                target.reset();
               }
-            }
-            
-            // Fire custom event with action type information
-            const customEvent = new CustomEvent('mvc-form-submit-complete', {
-              detail: { controller, action, result, form: target, isObjectAction: isObjectOnly }
-            });
-            document.dispatchEvent(customEvent);
-            
-          } catch (error) {
-            console.error('MVC form submission failed:', error);
-            
-            // Show error in result target if available
-            const resultTarget = target.getAttribute('mvc-result-target');
-            if (resultTarget) {
-              const targetElement = document.getElementById(resultTarget);
-              if (targetElement) {
+            } else {
+              console.log('🔍 Processing validation errors:', result);
+              
+              // Handle validation errors - display them next to form fields
+              if (result.errors && Array.isArray(result.errors)) {
+                
+                // Clear any existing validation messages
+                target.querySelectorAll('.invalid-feedback').forEach((el: Element) => {
+                  el.remove();
+                });
+                
+                // Clear any existing invalid classes (Bootstrap and Tailwind)
+                target.querySelectorAll('.is-invalid').forEach((el: Element) => {
+                  el.classList.remove('is-invalid');
+                });
+                target.querySelectorAll('.border-red-500').forEach((el: Element) => {
+                  el.classList.remove('border-red-500', 'focus:border-red-500');
+                });
+                
+                // Add validation errors to each field
+                result.errors.forEach((error: any) => {
+                  const fieldName = error.property || error.field || error.propertyName;
+                  const errorMessage = error.message || error.error;
+                  
+                  if (fieldName && errorMessage) {
+                    // Find the input field
+                    const inputElement = target.querySelector(`[name="${fieldName}"]`) as HTMLElement;
+                    
+                    if (inputElement) {
+                      // Add invalid classes (both Bootstrap and Tailwind)
+                      inputElement.classList.add('is-invalid', 'border-red-500', 'focus:border-red-500');
+                      
+                      // Create validation message element
+                      const validationDiv = document.createElement('div');
+                      validationDiv.className = 'invalid-feedback d-block text-red-600 text-sm mt-1';
+                      validationDiv.innerHTML = `<span class="text-red-500">⚠️</span> ${errorMessage}`;
+                      validationDiv.style.display = 'block';
+                      validationDiv.style.color = '#dc3545';
+                      validationDiv.style.fontSize = '0.875em';
+                      validationDiv.style.marginTop = '0.25rem';
+                      
+                      // Find the best place to insert the validation message
+                      let insertAfter = inputElement;
+                      
+                      // Check if there's a form-text element after the input
+                      const nextSibling = inputElement.nextElementSibling;
+                      if (nextSibling && (nextSibling.classList.contains('form-text') || nextSibling.classList.contains('text-sm'))) {
+                        insertAfter = nextSibling as HTMLElement;
+                      }
+                      
+                      // Insert validation message after the input (or form-text)
+                      insertAfter.parentNode?.insertBefore(validationDiv, insertAfter.nextSibling);
+                    } else {
+                      console.warn('⚠️ Could not find input element for field:', fieldName);
+                    }
+                  }
+                });
+                
+                // Update result target with general error message
                 const errorTemplate = target.getAttribute('mvc-error-template') || 
-                  `<div class="alert alert-error">Error: {{error}}</div>`;
+                  `<div class="alert alert-danger text-red-600 bg-red-50 border border-red-200 rounded-lg p-4"><h4>Please correct the following errors:</h4><p>{{error}}</p></div>`;
                 
-                // More robust template replacement for catch errors - decode HTML entities first
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = errorTemplate;
-                const decodedErrorTemplate = tempDiv.textContent || tempDiv.innerText || errorTemplate;
+                const processedErrorTemplate = HtmlHelper.processTemplate(errorTemplate, undefined, result.message || 'Validation failed');
                 
-                let processedErrorTemplate = decodedErrorTemplate;
-                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                processedErrorTemplate = processedErrorTemplate.replace(/\{\{error\}\}/g, errorMessage);
+                targetElement.innerHTML = processedErrorTemplate;
+              } else {
+                // General error handling
+                const errorTemplate = target.getAttribute('mvc-error-template') || 
+                  `<div class="alert alert-danger text-red-600 bg-red-50 border border-red-200 rounded-lg p-4">Error: {{error}}</div>`;
+                
+                const processedErrorTemplate = HtmlHelper.processTemplate(errorTemplate, undefined, result.error || 'Unknown error');
                 
                 targetElement.innerHTML = processedErrorTemplate;
               }
             }
-          } finally {
-            // Restore button state
-            if (submitButton) {
-              submitButton.textContent = originalText;
-              submitButton.disabled = false;
+          }
+          
+          // Fire custom event with action type information
+          const customEvent = new CustomEvent('mvc-form-submit-complete', {
+            detail: { controller: finalController, action: finalAction, result, form: target, isObjectAction: isObjectOnly }
+          });
+          document.dispatchEvent(customEvent);
+          
+        } catch (error) {
+          console.error('MVC form submission failed:', error);
+          
+          // Find or create result target for error display
+          let resultTarget = target.getAttribute('mvc-result-target');
+          let targetElement: HTMLElement | null = null;
+          
+          if (resultTarget) {
+            targetElement = document.getElementById(resultTarget);
+          } else {
+            targetElement = target.querySelector('.validation-summary') as HTMLElement ||
+                           target.querySelector('.alert') as HTMLElement;
+            
+            if (!targetElement) {
+              targetElement = document.createElement('div');
+              targetElement.className = 'validation-summary';
+              target.insertBefore(targetElement, target.firstChild);
             }
+          }
+          
+          if (targetElement) {
+            const errorTemplate = target.getAttribute('mvc-error-template') || 
+              `<div class="alert alert-danger text-red-600 bg-red-50 border border-red-200 rounded-lg p-4">Error: {{error}}</div>`;
+            
+            // Process template with centralized logic
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const processedErrorTemplate = HtmlHelper.processTemplate(errorTemplate, undefined, errorMessage);
+            
+            targetElement.innerHTML = processedErrorTemplate;
+          }
+        } finally {
+          // Restore button state
+          if (submitButton) {
+            submitButton.innerHTML = originalHTML;
+            submitButton.disabled = false;
           }
         }
       }

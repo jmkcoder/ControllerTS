@@ -1,0 +1,232 @@
+{% extends "shared/_base.njk" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-16">
+  <!-- Hero Section -->
+  <section class="text-center mb-20">
+    <div class="space-y-6">
+      <h1 class="text-5xl md:text-6xl font-bold tracking-tight">{{ title }}</h1>
+      <p class="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+        {{ description }}
+      </p>
+    </div>
+  </section>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+    <!-- What is ControllerTS -->
+    <div class="rounded-2xl border bg-card shadow-sm overflow-hidden">
+      <div class="border-b border-border bg-muted/50 px-6 py-4">
+        <h2 class="text-2xl font-semibold flex items-center gap-3">
+          <span class="material-icons text-primary icon-lg">info</span>
+          What is ControllerTS?
+        </h2>
+      </div>
+      <div class="p-6">
+        <p class="text-muted-foreground leading-relaxed">
+          ControllerTS is a modern TypeScript MVC framework designed to bring familiar .NET Core MVC patterns to the frontend. 
+          It combines the power of TypeScript with clean architecture principles and modern web technologies to create 
+          maintainable, scalable web applications.
+        </p>
+      </div>
+    </div>
+
+    <!-- Key Features -->
+    <div class="rounded-2xl border bg-card shadow-sm overflow-hidden">
+      <div class="border-b border-border bg-muted/50 px-6 py-4">
+        <h2 class="text-2xl font-semibold flex items-center gap-3">
+          <span class="material-icons text-primary icon-lg">star</span>
+          Key Features
+        </h2>
+      </div>
+      <div class="p-6">
+        <ul class="space-y-4">
+          <li class="flex items-start gap-3">
+            <span class="material-icons text-primary icon-sm mt-1">route</span>
+            <div>
+              <strong class="text-foreground">Decorator-based Routing</strong>
+              <p class="text-muted-foreground text-sm">Use @controller and @action decorators for clean, semantic routing</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="material-icons text-primary icon-sm mt-1">architecture</span>
+            <div>
+              <strong class="text-foreground">Clean Architecture</strong>
+              <p class="text-muted-foreground text-sm">Feature-based folder structure with controllers, models, and views</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="material-icons text-primary icon-sm mt-1">code</span>
+            <div>
+              <strong class="text-foreground">TypeScript First</strong>
+              <p class="text-muted-foreground text-sm">Full TypeScript support with strong typing throughout</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Architecture Section -->
+  <section class="mt-12">
+    <div class="rounded-2xl border bg-card shadow-sm overflow-hidden">
+      <div class="border-b border-border bg-muted/50 px-6 py-4">
+        <h2 class="text-2xl font-semibold flex items-center gap-3">
+          <span class="material-icons text-primary icon-lg">account_tree</span>
+          Project Architecture
+        </h2>
+        <p class="text-muted-foreground mt-2">The framework follows clean architecture principles with feature-based organization</p>
+      </div>
+      <div class="p-6">
+        <div class="bg-muted/30 p-6 rounded-xl border border-border font-mono text-sm">
+          <div class="text-foreground">src/features/</div>
+          <div class="text-muted-foreground ml-4">├── home/</div>
+          <div class="text-muted-foreground ml-8">│   ├── controllers/HomeController.ts</div>
+          <div class="text-muted-foreground ml-8">│   ├── models/HomeModel.ts</div>
+          <div class="text-muted-foreground ml-8">│   └── views/index.njk</div>
+          <div class="text-muted-foreground ml-4">├── products/</div>
+          <div class="text-muted-foreground ml-8">│   ├── controllers/ProductController.ts</div>
+          <div class="text-muted-foreground ml-8">│   ├── models/ProductModel.ts</div>
+          <div class="text-muted-foreground ml-8">│   └── views/list.njk</div>
+          <div class="text-muted-foreground ml-4">└── contact/</div>
+          <div class="text-muted-foreground ml-8">&nbsp;&nbsp;&nbsp;&nbsp;├── controllers/ContactController.ts</div>
+          <div class="text-muted-foreground ml-8">&nbsp;&nbsp;&nbsp;&nbsp;├── models/ContactModel.ts</div>
+          <div class="text-muted-foreground ml-8">&nbsp;&nbsp;&nbsp;&nbsp;└── views/form.njk</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Technology Stack -->
+  <section class="mt-12">
+    <div class="rounded-2xl border bg-card shadow-sm overflow-hidden">
+      <div class="border-b border-border bg-muted/50 px-6 py-4">
+        <h2 class="text-2xl font-semibold flex items-center gap-3">
+          <span class="material-icons text-primary icon-lg">build</span>
+          Technology Stack
+        </h2>
+        <p class="text-muted-foreground mt-2">Modern technologies powering the framework</p>
+      </div>
+      <div class="p-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="text-center p-6 bg-muted/30 rounded-xl border border-border hover:shadow-md transition-all">
+            <div class="flex items-center justify-center mb-3">
+              <span class="material-icons text-3xl text-primary">code</span>
+            </div>
+            <div class="font-semibold text-foreground">TypeScript</div>
+            <div class="text-sm text-muted-foreground">Language</div>
+          </div>
+          <div class="text-center p-6 bg-muted/30 rounded-xl border border-border hover:shadow-md transition-all">
+            <div class="flex items-center justify-center mb-3">
+              <span class="material-icons text-3xl text-primary">palette</span>
+            </div>
+            <div class="font-semibold text-foreground">Tailwind CSS</div>
+            <div class="text-sm text-muted-foreground">Styling</div>
+          </div>
+          <div class="text-center p-6 bg-muted/30 rounded-xl border border-border hover:shadow-md transition-all">
+            <div class="flex items-center justify-center mb-3">
+              <span class="material-icons text-3xl text-primary">view_quilt</span>
+            </div>
+            <div class="font-semibold text-foreground">Nunjucks</div>
+            <div class="text-sm text-muted-foreground">Templates</div>
+          </div>
+          <div class="text-center p-6 bg-muted/30 rounded-xl border border-border hover:shadow-md transition-all">
+            <div class="flex items-center justify-center mb-3">
+              <span class="material-icons text-3xl text-primary">build_circle</span>
+            </div>
+            <div class="font-semibold text-foreground">Vite/Webpack</div>
+            <div class="text-sm text-muted-foreground">Build Tools</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Choose ControllerTS -->
+  <section class="mt-12">
+    <div class="rounded-2xl border bg-card shadow-sm overflow-hidden">
+      <div class="border-b border-border bg-muted/50 px-6 py-4">
+        <h2 class="text-2xl font-semibold flex items-center gap-3">
+          <span class="material-icons text-primary icon-lg">lightbulb</span>
+          Why Choose ControllerTS?
+        </h2>
+      </div>
+      <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <div class="flex items-start gap-3">
+              <span class="material-icons text-green-500 icon-sm mt-1">check_circle</span>
+              <div>
+                <strong class="text-foreground">Familiar Patterns</strong>
+                <p class="text-muted-foreground text-sm">If you know .NET Core MVC, you already know ControllerTS</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="material-icons text-green-500 icon-sm mt-1">check_circle</span>
+              <div>
+                <strong class="text-foreground">Type Safety</strong>
+                <p class="text-muted-foreground text-sm">Catch errors at compile time with full TypeScript support</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="material-icons text-green-500 icon-sm mt-1">check_circle</span>
+              <div>
+                <strong class="text-foreground">Modern UI</strong>
+                <p class="text-muted-foreground text-sm">Built with Tailwind CSS and shadcn/ui components</p>
+              </div>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-start gap-3">
+              <span class="material-icons text-green-500 icon-sm mt-1">check_circle</span>
+              <div>
+                <strong class="text-foreground">Fast Development</strong>
+                <p class="text-muted-foreground text-sm">Hot module replacement and instant feedback</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="material-icons text-green-500 icon-sm mt-1">check_circle</span>
+              <div>
+                <strong class="text-foreground">Scalable</strong>
+                <p class="text-muted-foreground text-sm">Feature-based architecture that grows with your app</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="material-icons text-green-500 icon-sm mt-1">check_circle</span>
+              <div>
+                <strong class="text-foreground">Developer Experience</strong>
+                <p class="text-muted-foreground text-sm">IntelliSense, debugging, and great tooling support</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section class="text-center mt-20">
+    <div class="space-y-6">
+      <h2 class="text-3xl font-bold">Ready to Get Started?</h2>
+      <p class="text-muted-foreground max-w-2xl mx-auto">
+        Explore our demo, check out the products showcase, or get in touch with our team to learn more about ControllerTS.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/home/demo" class="inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow-lg transition-all duration-300 hover:bg-primary/90 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <span class="material-icons mr-2 icon-sm">play_circle</span>
+          View Demo
+        </a>
+        <a href="/products" class="inline-flex items-center justify-center rounded-xl border border-input bg-background px-6 py-3 text-sm font-medium shadow-sm transition-all duration-300 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <span class="material-icons mr-2 icon-sm">inventory_2</span>
+          Explore Products
+        </a>
+        <a href="/contact" class="inline-flex items-center justify-center rounded-xl border border-input bg-background px-6 py-3 text-sm font-medium shadow-sm transition-all duration-300 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <span class="material-icons mr-2 icon-sm">contact_mail</span>
+          Contact Us
+        </a>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

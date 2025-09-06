@@ -52,7 +52,8 @@ module.exports = (env, argv) => {
           test: /\.css$/,
           use: [
             isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
-            'css-loader'
+            'css-loader',
+            'postcss-loader'
           ]
         },
         {
@@ -104,12 +105,22 @@ module.exports = (env, argv) => {
           {
             from: 'src/views/',
             to: 'src/views/',
-            context: '.'
+            context: '.',
+            noErrorOnMissing: true
           },
           {
             from: 'src/shared/',
             to: 'src/shared/',
             context: '.'
+          },
+          // Copy feature-based views
+          {
+            from: 'src/features/',
+            to: 'src/features/',
+            context: '.',
+            globOptions: {
+              ignore: ['**/*.ts', '**/*.js']
+            }
           },
           // Copy environment files
           {

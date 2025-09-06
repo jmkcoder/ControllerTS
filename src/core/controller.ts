@@ -7,6 +7,7 @@ export class Controller {
   private static routerInstance: any = null;
   protected queryParams: Record<string, string> = {};
   protected queryParamsRaw: URLSearchParams = new URLSearchParams();
+  protected routeParams: Record<string, string> = {}; // Add route parameters
   protected modelState: ModelState = new ModelState(); // Model validation state
 
   constructor() {
@@ -123,6 +124,27 @@ export class Controller {
   setQueryParams(params: Record<string, string>, urlSearchParams: URLSearchParams): void {
     this.queryParams = params;
     this.queryParamsRaw = urlSearchParams;
+  }
+
+  /**
+   * Set route parameters from the router
+   */
+  setRouteParams(params: Record<string, string>): void {
+    this.routeParams = params;
+  }
+
+  /**
+   * Get a route parameter value
+   */
+  protected getRouteParam(name: string): string | null {
+    return this.routeParams[name] || null;
+  }
+
+  /**
+   * Get all route parameters as an object
+   */
+  protected getRouteParams(): Record<string, string> {
+    return { ...this.routeParams };
   }
 
   /**

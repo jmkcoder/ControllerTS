@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Form Interception Test</title>
+    <link href="https://cdn.tailwindcss.com/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">Universal Form Test</h1>
+        
+        <!-- Test Form 1: No MVC attributes - should be intercepted by universal handler -->
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold mb-4 text-gray-700">Form without MVC attributes:</h2>
+            <form action="/contact/submit" method="POST" class="space-y-4">
+                <div id="test-result-1" class="validation-summary hidden"></div>
+                
+                <div>
+                    <label for="name1" class="block text-sm font-medium text-gray-700">Name:</label>
+                    <input type="text" id="name1" name="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2 border">
+                </div>
+                
+                <div>
+                    <label for="email1" class="block text-sm font-medium text-gray-700">Email:</label>
+                    <input type="email" id="email1" name="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2 border">
+                </div>
+                
+                <div>
+                    <label for="message1" class="block text-sm font-medium text-gray-700">Message:</label>
+                    <textarea id="message1" name="message" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2 border"></textarea>
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Submit Test Form 1
+                </button>
+            </form>
+        </div>
+        
+        <!-- Test Form 2: With MVC attributes for comparison -->
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold mb-4 text-gray-700">Form with MVC attributes:</h2>
+            <form mvc-controller="contact" mvc-action="submit" mvc-result-target="test-result-2" method="POST" class="space-y-4">
+                <div id="test-result-2" class="validation-summary hidden"></div>
+                
+                <div>
+                    <label for="name2" class="block text-sm font-medium text-gray-700">Name:</label>
+                    <input type="text" id="name2" name="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2 border">
+                </div>
+                
+                <div>
+                    <label for="email2" class="block text-sm font-medium text-gray-700">Email:</label>
+                    <input type="email" id="email2" name="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2 border">
+                </div>
+                
+                <div>
+                    <label for="message2" class="block text-sm font-medium text-gray-700">Message:</label>
+                    <textarea id="message2" name="message" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2 border"></textarea>
+                </div>
+                
+                <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                    Submit Test Form 2
+                </button>
+            </form>
+        </div>
+        
+        <!-- Test Form 3: No action attribute - should infer from URL -->
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold mb-4 text-gray-700">Form without action (should infer route):</h2>
+            <form method="POST" class="space-y-4">
+                <div id="test-result-3" class="validation-summary hidden"></div>
+                
+                <div>
+                    <label for="name3" class="block text-sm font-medium text-gray-700">Name:</label>
+                    <input type="text" id="name3" name="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2 border">
+                </div>
+                
+                <div>
+                    <label for="email3" class="block text-sm font-medium text-gray-700">Email:</label>
+                    <input type="email" id="email3" name="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2 border">
+                </div>
+                
+                <button type="submit" class="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
+                    Submit Test Form 3
+                </button>
+            </form>
+        </div>
+        
+        <!-- Results Display -->
+        <div class="mt-8 p-4 bg-gray-50 rounded-lg">
+            <h3 class="text-md font-semibold text-gray-700 mb-2">Test Instructions:</h3>
+            <ul class="text-sm text-gray-600 space-y-1">
+                <li>• <strong>Form 1:</strong> No MVC attributes, uses action="/contact/submit"</li>
+                <li>• <strong>Form 2:</strong> Has MVC attributes (traditional approach)</li>
+                <li>• <strong>Form 3:</strong> No action attribute, should infer route from current URL</li>
+                <li>• All forms should be intercepted and processed by the MVC system</li>
+                <li>• Open browser console to see interception logs</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Load the MVC system -->
+    <script src="/vendors.js"></script>
+    <script src="/main.js"></script>
+    
+    <style>
+        .validation-summary {
+            margin-bottom: 1rem;
+        }
+        .validation-summary.hidden {
+            display: none;
+        }
+        .invalid-feedback {
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+        }
+        .is-invalid, .border-red-500 {
+            border-color: #dc3545 !important;
+        }
+    </style>
+</body>
+</html>
