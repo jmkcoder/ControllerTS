@@ -1,0 +1,285 @@
+{% extends "shared/_base.njk" %}
+
+{% block title %}{{ title or "Configuration Manager" }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+  <h1>{{ title or "Configuration Manager Demo" }}</h1>
+  {% if subtitle %}
+    <p style="font-size: 1.2em; color: #666; margin-bottom: 30px;">{{ subtitle }}</p>
+  {% endif %}
+
+  <!-- Configuration Info -->
+  <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196f3; margin-bottom: 30px;">
+    <h3 style="margin-top: 0; color: #1976d2;">📋 Layered Configuration System</h3>
+    <p style="margin-bottom: 10px;">
+      <strong>Base Configuration:</strong> <code>.env</code> contains common settings across all environments
+    </p>
+    <p style="margin-bottom: 10px;">
+      <strong>Environment Overrides:</strong> <code>.env.{{ environment }}</code> contains environment-specific values that override the base
+    </p>
+    <p style="margin: 0;">
+      <strong>Loading Order:</strong> Base .env → Environment-specific .env → Runtime updates
+    </p>
+  </div>
+
+  <!-- Navigation -->
+  <div style="margin-bottom: 30px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+    <strong>Demo Sections:</strong>
+    <a href="/config" style="margin-left: 15px;">Overview</a>
+    <a href="/config/environment" style="margin-left: 15px;">Environment</a>
+    <a href="/config/api-test" style="margin-left: 15px;">API Test</a>
+    <a href="/config/features" style="margin-left: 15px;">Features</a>
+    {% if isDevelopment %}
+      <a href="/config/update" style="margin-left: 15px;">Update Config</a>
+    {% endif %}
+  </div>
+
+  <!-- Error Display -->
+  {% if error %}
+    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+      <strong>Error:</strong> {{ error }}
+    </div>
+  {% endif %}
+
+  <!-- Overview Section -->
+  {% if appConfig %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
+      
+      <!-- Application Config -->
+      <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3 style="margin-top: 0; color: #2c3e50;">🚀 Application</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Name:</strong></td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eee;">{{ appConfig.name }}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Version:</strong></td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eee;">{{ appConfig.version }}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Environment:</strong></td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eee;">
+              <span style="background: {% if environment == 'production' %}#dc3545{% elif environment == 'uat' %}#fd7e14{% elif environment == 'development' %}#28a745{% else %}#6c757d{% endif %}; color: white; padding: 2px 8px; border-radius: 3px; font-size: 0.8em;">
+                {{ environment | upper }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Debug Mode:</strong></td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eee;">
+              {% if isDebug %}
+                <span style="color: #28a745;">✅ Enabled</span>
+              {% else %}
+                <span style="color: #dc3545;">❌ Disabled</span>
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0;"><strong>Base URL:</strong></td>
+            <td style="padding: 8px 0;">{{ appConfig.baseUrl }}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- API Config -->
+      {% if apiConfig %}
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <h3 style="margin-top: 0; color: #2c3e50;">🌐 API Configuration</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Base URL:</strong></td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #eee;">{{ apiConfig.baseUrl }}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Timeout:</strong></td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #eee;">{{ apiConfig.timeout }}ms</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Retries:</strong></td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #eee;">{{ apiConfig.retries }}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0;"><strong>Authentication:</strong></td>
+              <td style="padding: 8px 0;">
+                {% if apiConfig.hasApiKey %}
+                  <span style="color: #28a745;">✅ Configured</span>
+                {% else %}
+                  <span style="color: #ffc107;">⚠️ Not configured</span>
+                {% endif %}
+              </td>
+            </tr>
+          </table>
+        </div>
+      {% endif %}
+
+    </div>
+  {% endif %}
+
+  <!-- Test Results -->
+  {% if testResults %}
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;">
+      <h3 style="margin-top: 0; color: #2c3e50;">🧪 API Configuration Test Results</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+        
+        <div style="padding: 15px; border-left: 4px solid {% if testResults.baseUrlValid %}#28a745{% else %}#dc3545{% endif %}; background: {% if testResults.baseUrlValid %}#d4edda{% else %}#f8d7da{% endif %};">
+          <strong>Base URL Valid:</strong><br>
+          {% if testResults.baseUrlValid %}✅ Valid{% else %}❌ Invalid{% endif %}
+        </div>
+        
+        <div style="padding: 15px; border-left: 4px solid {% if testResults.timeoutReasonable %}#28a745{% else %}#ffc107{% endif %}; background: {% if testResults.timeoutReasonable %}#d4edda{% else %}#fff3cd{% endif %};">
+          <strong>Timeout Reasonable:</strong><br>
+          {% if testResults.timeoutReasonable %}✅ Good{% else %}⚠️ Check timeout{% endif %}
+        </div>
+        
+        <div style="padding: 15px; border-left: 4px solid {% if testResults.retriesConfigured %}#28a745{% else %}#ffc107{% endif %}; background: {% if testResults.retriesConfigured %}#d4edda{% else %}#fff3cd{% endif %};">
+          <strong>Retries Configured:</strong><br>
+          {% if testResults.retriesConfigured %}✅ Good{% else %}⚠️ Check retries{% endif %}
+        </div>
+        
+        <div style="padding: 15px; border-left: 4px solid {% if testResults.authenticationConfigured %}#28a745{% else %}#ffc107{% endif %}; background: {% if testResults.authenticationConfigured %}#d4edda{% else %}#fff3cd{% endif %};">
+          <strong>Authentication:</strong><br>
+          {% if testResults.authenticationConfigured %}✅ Configured{% else %}⚠️ Not configured{% endif %}
+        </div>
+        
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Feature Flags -->
+  {% if features %}
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;">
+      <h3 style="margin-top: 0; color: #2c3e50;">🚩 Feature Flags</h3>
+      
+      {% if enabledFeatures.length > 0 %}
+        <div style="margin-bottom: 20px;">
+          <h4 style="color: #28a745;">✅ Enabled Features</h4>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            {% for feature in enabledFeatures %}
+              <span style="background: #28a745; color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.9em;">
+                {{ feature[0] }}
+              </span>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+      
+      {% if disabledFeatures.length > 0 %}
+        <div>
+          <h4 style="color: #6c757d;">❌ Disabled Features</h4>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            {% for feature in disabledFeatures %}
+              <span style="background: #6c757d; color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.9em;">
+                {{ feature[0] }}
+              </span>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <!-- Recommendations -->
+  {% if recommendations and recommendations.length > 0 %}
+    <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; border-left: 4px solid #2196f3; margin-bottom: 20px;">
+      <h3 style="margin-top: 0; color: #1976d2;">💡 Recommendations</h3>
+      <ul style="margin: 0;">
+        {% for recommendation in recommendations %}
+          <li style="margin-bottom: 8px;">{{ recommendation }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <!-- Environment Configuration (detailed view) -->
+  {% if environmentConfig and currentEnvironment %}
+    <details style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;">
+      <summary style="cursor: pointer; font-weight: bold; color: #2c3e50; margin-bottom: 15px;">
+        🔧 Complete Configuration ({{ currentEnvironment }})
+      </summary>
+      <pre style="background: #f8f9fa; padding: 15px; border-radius: 5px; overflow: auto; font-size: 0.9em;">{{ environmentConfig | dump(2) }}</pre>
+    </details>
+  {% endif %}
+
+  <!-- Configuration Update Form -->
+  {% if isUpdateForm and isDevelopment %}
+    <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 20px;">
+      <h3 style="margin-top: 0; color: #856404;">⚠️ Development Only: Update Configuration</h3>
+      <p><strong>Note:</strong> Configuration changes are temporary and only affect the current session.</p>
+      
+      <form action="/config/update" method="post" style="margin-top: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+          
+          <div>
+            <label style="font-weight: bold;">API Base URL:</label><br>
+            <input type="text" name="config.api.baseUrl" value="{{ currentConfig.api.baseUrl }}" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          
+          <div>
+            <label style="font-weight: bold;">API Timeout (ms):</label><br>
+            <input type="number" name="config.api.timeout" value="{{ currentConfig.api.timeout }}" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          
+          <div>
+            <label style="font-weight: bold;">Debug Mode:</label><br>
+            <select name="config.debug" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;">
+              <option value="true" {% if currentConfig.debug %}selected{% endif %}>Enabled</option>
+              <option value="false" {% if not currentConfig.debug %}selected{% endif %}>Disabled</option>
+            </select>
+          </div>
+          
+        </div>
+        
+        <button type="submit" style="margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Update Configuration
+        </button>
+      </form>
+    </div>
+  {% endif %}
+
+  <!-- Updated Values -->
+  {% if updatedValues %}
+    <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+      <strong>✅ Configuration Updated Successfully!</strong><br>
+      Updated values: {{ updatedValues | dump }}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add some interactivity for better UX
+document.addEventListener('DOMContentLoaded', function() {
+  // Highlight current environment
+  const envElements = document.querySelectorAll('[data-environment]');
+  envElements.forEach(el => {
+    const env = el.getAttribute('data-environment');
+    if (env === '{{ environment }}') {
+      el.style.background = '#e3f2fd';
+      el.style.border = '2px solid #2196f3';
+    }
+  });
+  
+  // Auto-refresh for development
+  {% if isDevelopment %}
+    // Check for configuration changes every 30 seconds in development
+    setInterval(() => {
+      if (document.hidden) return; // Don't refresh if tab is not active
+      
+      // Add a subtle indicator that config is being checked
+      const indicator = document.createElement('div');
+      indicator.textContent = '🔄 Checking configuration...';
+      indicator.style.cssText = 'position: fixed; top: 10px; right: 10px; background: #17a2b8; color: white; padding: 8px 12px; border-radius: 4px; font-size: 0.8em; z-index: 1000;';
+      document.body.appendChild(indicator);
+      
+      setTimeout(() => {
+        document.body.removeChild(indicator);
+      }, 2000);
+    }, 30000);
+  {% endif %}
+});
+</script>
+{% endblock %}
