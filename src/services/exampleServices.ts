@@ -2,7 +2,7 @@
  * Example services to demonstrate Dependency Injection
  */
 
-import { Injectable, Singleton, Scoped } from '../core/diDecorators.js';
+import { Injectable, Singleton, Scoped } from '../core/diDecorators';
 
 // Example interface for better abstraction
 export interface IUserService {

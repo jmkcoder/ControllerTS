@@ -23,9 +23,12 @@ export class HomeController extends Controller {
     } catch (error) {
       // Fallback if DI services aren't available yet
       console.warn('DI services not available, creating fallback instances', error);
-      this.logger = new LoggerService();
-      this.userService = new UserService(this.logger);
-      this.emailService = new EmailService(this.logger);
+      // Create logger first
+      const fallbackLogger = new LoggerService();
+      this.logger = fallbackLogger;
+      // Now use the logger to create other services
+      this.userService = new UserService(fallbackLogger);
+      this.emailService = new EmailService(fallbackLogger);
       this.logger.log('HomeController created with fallback dependencies');
     }
   }

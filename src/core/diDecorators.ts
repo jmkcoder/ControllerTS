@@ -50,6 +50,8 @@ export function Transient<T extends new (...args: any[]) => any>(target: T): T {
  * Scoped service decorator
  */
 export function Scoped<T extends new (...args: any[]) => any>(target: T): T {
+    // Explicitly ensure metadata is preserved by adding a property
+    (target as any).__scoped = true;
     serviceContainer.addScoped(target);
     return target;
 }

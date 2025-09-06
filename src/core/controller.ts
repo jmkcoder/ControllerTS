@@ -57,16 +57,36 @@ export class Controller {
   }
 
   /**
-   * Get service from DI container
+   * Get service from DI container (uses request-scoped container if available)
    */
   protected getService<T>(serviceType: new (...args: any[]) => T): T {
+    // Try to get from request-scoped container first
+    const currentRequestServices = (window as any).currentRequestServices;
+    if (currentRequestServices) {
+      try {
+        return currentRequestServices.getService(serviceType);
+      } catch {
+        // Fall back to global container
+      }
+    }
+    
     return serviceContainer.getService(serviceType);
   }
 
   /**
-   * Try to get service from DI container
+   * Try to get service from DI container (uses request-scoped container if available)
    */
   protected tryGetService<T>(serviceType: new (...args: any[]) => T): T | null {
+    // Try to get from request-scoped container first
+    const currentRequestServices = (window as any).currentRequestServices;
+    if (currentRequestServices) {
+      try {
+        return currentRequestServices.tryGetService(serviceType);
+      } catch {
+        // Fall back to global container
+      }
+    }
+    
     return serviceContainer.tryGetService(serviceType);
   }
 

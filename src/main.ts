@@ -7,29 +7,20 @@ import { Controller } from './core/controller';
 import { serviceContainer } from './core/serviceContainer';
 import { LoggerService, UserService, EmailService } from './services/exampleServices';
 import { ProductService } from './services/productService';
+import { RequestPipeline, LoggingMiddleware, ErrorHandlingMiddleware, DIScopeMiddleware, RequestContextMiddleware } from './core/requestPipeline';
 import './style.css';
 
-// IMPORTANT: Register services FIRST before importing controllers
-// Register LoggerService first (no dependencies)
+// IMPORTANT: Register services using proper DI registration (no more factories needed!)
+// Register singleton services (shared across the entire application)
 serviceContainer.addSingleton(LoggerService);
-
-// Register services with explicit factories to handle dependencies
-serviceContainer.addScopedFactory(UserService, (container) => {
-  const logger = container.getService(LoggerService);
-  return new UserService(logger);
-});
-
-serviceContainer.addTransientFactory(EmailService, (container) => {
-  const logger = container.getService(LoggerService);
-  return new EmailService(logger);
-});
-
-serviceContainer.addScopedFactory(ProductService, (container) => {
-  const logger = container.getService(LoggerService);
-  return new ProductService(logger);
-});
-
 serviceContainer.addSingleton(ViewEngine);
+
+// Register scoped services (one instance per request)
+serviceContainer.addScoped(UserService);
+serviceContainer.addScoped(ProductService);
+
+// Register transient services (new instance every time)
+serviceContainer.addTransient(EmailService);
 
 // NOW import controllers to trigger @AutoRegister decorators
 // This ensures services are available when controllers are constructed
@@ -64,8 +55,23 @@ for (const [name, controllerClass] of discoveredControllers) {
     }
 }
 
+// Create and configure the request pipeline
+const pipeline = new RequestPipeline(serviceContainer, router);
+
+// Add middleware to the pipeline (order matters!)
+pipeline
+    .use(new ErrorHandlingMiddleware())      // Handle errors first
+    .use(new LoggingMiddleware())           // Log requests
+    .use(new DIScopeMiddleware())           // Setup DI scoping
+    .use(new RequestContextMiddleware());   // Add request context to DI
+
+// Set up the pipeline handler in the router
+router.setPipelineHandler((url: string, method: string) => pipeline.processRequest(url, method));
+
+// Initialize routing - now all routes will go through the pipeline
 router.init();
 
-// Make router and DI container available globally for debugging
+// Make router, DI container, and pipeline available globally for debugging
 (window as any).router = router;
 (window as any).serviceContainer = serviceContainer;
+(window as any).requestPipeline = pipeline;

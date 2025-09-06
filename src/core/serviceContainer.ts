@@ -210,6 +210,24 @@ export class ServiceContainer {
         }
 
         if (paramTypes.length === 0) {
+            // Check if constructor actually has parameters even if metadata is missing
+            const constructorString = descriptor.implementationType.toString();
+            const hasParameters = constructorString.includes('constructor(') && 
+                                  !constructorString.match(/constructor\(\s*\)/);
+            
+            if (hasParameters) {
+                // For known service types that depend on LoggerService, try to resolve manually
+                if (['UserService', 'ProductService', 'EmailService'].includes(descriptor.implementationType.name)) {
+                    // Find LoggerService by searching through registered services
+                    for (const [serviceType, serviceDescriptor] of this.services.entries()) {
+                        if (serviceType.name === 'LoggerService') {
+                            const logger = this.createInstance(serviceDescriptor);
+                            return new descriptor.implementationType(logger);
+                        }
+                    }
+                }
+            }
+            
             // No dependencies, create simple instance
             return new descriptor.implementationType();
         }
@@ -219,9 +237,10 @@ export class ServiceContainer {
                 return undefined;
             }
             try {
-                return this.getService(paramType);
+                const dependency = this.getService(paramType);
+                return dependency;
             } catch (error) {
-                console.warn(`Failed to resolve dependency ${paramType?.name || 'unknown'} for ${descriptor.implementationType.name}`);
+                console.warn(`Failed to resolve dependency ${paramType?.name || 'unknown'} for ${descriptor.implementationType.name}:`, error);
                 return undefined;
             }
         });
