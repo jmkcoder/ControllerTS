@@ -26,8 +26,6 @@ async function initializeApplication() {
     // Register transient services (new instance every time)
     serviceContainer.addTransient(EmailService);
 
-    // AUTO-LOAD controllers based on inheritance - NO MORE MANUAL IMPORTS! 🎉
-    console.log('🚀 Starting automatic controller discovery...');
     await AutoControllerLoader.loadAllControllers();
 
     // Controllers are now auto-loaded after service registration
