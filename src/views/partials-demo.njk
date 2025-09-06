@@ -1,0 +1,137 @@
+{% extends "shared/_base.njk" %}
+
+{% block title %}Partial Views Demo{% endblock %}
+
+{% block content %}
+  <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+    <h3>Navigation</h3>
+    <nav>
+      <a href="/" style="margin-right: 15px; padding: 8px 12px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">Home</a>
+      <a href="/about" style="margin-right: 15px; padding: 8px 12px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">About</a>
+      <a href="/home/partials-demo" style="margin-right: 15px; padding: 8px 12px; background: #007bff; color: white; text-decoration: none; border-radius: 4px;">Partials Demo</a>
+    </nav>
+  </div>
+
+  {# Include breadcrumb partial with data #}
+  {% set breadcrumbs = [{ title: "Framework", url: "/home" }, { title: "Demos", url: "/home/demo" }, { title: "Partial Views" }] %}
+  {% include "partials/breadcrumb.njk" %}
+
+  <h1>🧩 Partial Views with Nunjucks</h1>
+  <p>This page demonstrates how to use partial views (includes) with specific data in Nunjucks.</p>
+
+  {# Show different types of alerts #}
+  <h2>📢 Alert Partials</h2>
+  {% set type = "success" %}
+  {% set title = "Success" %}
+  {% set message = "Your data has been saved successfully" %}
+  {% set dismissible = true %}
+  {% include "partials/alert.njk" %}
+  
+  {% set type = "warning" %}
+  {% set title = "" %}
+  {% set message = "Please review your input before submitting" %}
+  {% set details = "Some fields may require additional validation" %}
+  {% set dismissible = false %}
+  {% include "partials/alert.njk" %}
+  
+  {% set type = "error" %}
+  {% set title = "Validation Error" %}
+  {% set message = "Please fix the following issues" %}
+  {% set details = "Email format is invalid and password must be at least 8 characters" %}
+  {% set dismissible = false %}
+  {% include "partials/alert.njk" %}
+
+  {# Show user cards with different data and options #}
+  <h2>👥 User Card Partials</h2>
+  
+  <h3>Admin User (with details and actions)</h3>
+  {% set user = { id: 1, name: "John Admin", email: "john@example.com", phone: "+1-555-0123", department: "IT", role: "Administrator" } %}
+  {% set showDetails = true %}
+  {% set showActions = true %}
+  {% include "partials/user-card.njk" %}
+
+  <h3>Regular User (details only)</h3>
+  {% set user = { id: 2, name: "Jane Smith", email: "jane.smith@example.com", department: "Marketing", role: "Manager" } %}
+  {% set showDetails = true %}
+  {% set showActions = false %}
+  {% include "partials/user-card.njk" %}
+
+  <h3>Simple User Card (minimal)</h3>
+  {% set user = { id: 3, name: "Bob Wilson", email: "bob@example.com" } %}
+  {% set showDetails = false %}
+  {% set showActions = false %}
+  {% include "partials/user-card.njk" %}
+
+  {# Show pagination example #}
+  <h2>📄 Pagination Partial</h2>
+  <p>Example pagination for a product listing:</p>
+  {% set currentPage = 3 %}
+  {% set totalPages = 10 %}
+  {% set totalItems = 95 %}
+  {% set itemsPerPage = 10 %}
+  {% set baseUrl = "/products" %}
+  {% set queryParam = "page" %}
+  {% set otherParams = { category: "electronics", sort: "price" } %}
+  {% include "partials/pagination.njk" %}
+
+  {# Dynamic user list using partials #}
+  <h2>🔄 Dynamic User List</h2>
+  {% if allUsers %}
+    <div class="users-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+      {% for user in allUsers %}
+        {% set showDetails = loop.index <= 2 %}
+        {% set showActions = true %}
+        {% include "partials/user-card.njk" %}
+      {% endfor %}
+    </div>
+  {% else %}
+    {% set type = "info" %}
+    {% set message = "No users found. Please check back later." %}
+    {% include "partials/alert.njk" %}
+  {% endif %}
+
+  {# Code examples #}
+  <h2>💻 How to Use Partials</h2>
+  <div style="background: #f8f9fa; padding: 20px; border-radius: 4px; margin: 20px 0;">
+    <h3>Basic Include</h3>
+    <pre style="background: #fff; padding: 10px; border-radius: 4px; overflow-x: auto;"><code>{% raw %}{% set type = "success" %}
+{% set message = "Hello World" %}
+{% include "partials/alert.njk" %}{% endraw %}</code></pre>
+    
+    <h3>Include with Data</h3>
+    <pre style="background: #fff; padding: 10px; border-radius: 4px; overflow-x: auto;"><code>{% raw %}{% set user = currentUser %}
+{% set showDetails = true %}
+{% set showActions = false %}
+{% include "partials/user-card.njk" %}{% endraw %}</code></pre>
+    
+    <h3>Include in Loop</h3>
+    <pre style="background: #fff; padding: 10px; border-radius: 4px; overflow-x: auto;"><code>{% raw %}{% for item in items %}
+  {% set user = item %}
+  {% set showDetails = loop.index <= 3 %}
+  {% include "partials/user-card.njk" %}
+{% endfor %}{% endraw %}</code></pre>
+  </div>
+
+  <div style="margin-top: 30px; padding: 20px; background: #e7f3ff; border-radius: 4px;">
+    <h3>✨ Benefits of Partial Views</h3>
+    <ul>
+      <li>🔄 <strong>Reusability:</strong> Write once, use everywhere</li>
+      <li>🧹 <strong>Clean Code:</strong> Keep templates organized and maintainable</li>
+      <li>🎛️ <strong>Flexibility:</strong> Pass different data to the same partial</li>
+      <li>🎨 <strong>Consistency:</strong> Ensure UI components look the same across pages</li>
+      <li>🔧 <strong>Easy Updates:</strong> Change one file to update all instances</li>
+    </ul>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewUser(userId) {
+  alert('Viewing user with ID: ' + userId);
+}
+
+function editUser(userId) {
+  alert('Editing user with ID: ' + userId);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends "shared/_base.njk" %}
+{% from "partials/macros.njk" import formField, button, card %}
+
+{% block title %}Advanced Nunjucks Demo{% endblock %}
+
+{% block content %}
+  {# Include breadcrumb with specific data #}
+  {% set breadcrumbData = { breadcrumbs: [{ title: 'Home', url: '/' }, { title: 'Demos', url: '/home/demo' }, { title: 'Advanced Nunjucks' }] } %}
+  {% include "partials/breadcrumb.njk" with breadcrumbData %}
+
+  <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+    <h3>Navigation</h3>
+    <nav>
+      <a href="/" style="margin-right: 15px; padding: 8px 12px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">Home</a>
+      <a href="/home/demo" style="margin-right: 15px; padding: 8px 12px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">Basic Demo</a>
+      <a href="/home/partials-demo" style="margin-right: 15px; padding: 8px 12px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">Partials</a>
+      <a href="/home/advanced-demo" style="margin-right: 15px; padding: 8px 12px; background: #007bff; color: white; text-decoration: none; border-radius: 4px;">Advanced</a>
+    </nav>
+  </div>
+
+  <h1>🚀 Advanced Nunjucks Features</h1>
+  <p>This page demonstrates advanced Nunjucks features including partials, macros, and complex data handling.</p>
+
+  {# Macro demonstration #}
+  {% call card("🎯 Macro Examples", "", "Macros are reusable functions in Nunjucks") %}
+    <h4>Contact Form using Macros</h4>
+    <form style="max-width: 500px;">
+      {{ formField("text", "name", "Full Name", "", "Enter your full name", true) }}
+      {{ formField("email", "email", "Email Address", "", "your@email.com", true) }}
+      {{ formField("select", "department", "Department", "", "", true, [
+        { value: "sales", label: "Sales" },
+        { value: "support", label: "Technical Support" },
+        { value: "billing", label: "Billing" },
+        { value: "general", label: "General Inquiry" }
+      ]) }}
+      {{ formField("textarea", "message", "Message", "", "Please describe your inquiry...", true) }}
+      
+      <div style="margin-top: 20px;">
+        {{ button("Submit Form", "submit", "primary", "medium") }}
+        {{ button("Reset", "reset", "secondary", "medium") }}
+        {{ button("Cancel", "button", "danger", "small", "history.back()") }}
+      </div>
+    </form>
+  {% endcall %}
+
+  {# Conditional partials with complex data #}
+  {% if users and users.length > 0 %}
+    {% call card("👥 User Management", "", "Showing " + users.length + " users") %}
+      {% for user in users %}
+        {% set userCardData = { user: user, showDetails: user.role == 'admin' or loop.index <= 3, showActions: currentUser and currentUser.role == 'admin' } %}
+        {% include "partials/user-card.njk" with userCardData %}
+      {% endfor %}
+    {% endcall %}
+  {% endif %}
+
+  {# Dynamic alerts based on conditions #}
+  {% if notifications %}
+    {% for notification in notifications %}
+      {% include "partials/alert.njk" with notification %}
+    {% endfor %}
+  {% endif %}
+
+  {# Complex partial with nested data #}
+  {% call card("📊 Dashboard Widgets", "", "Updated " + timestamp) %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+      
+      {# Stats widget using partial data #}
+      {% set usersAlert = { type: 'info', title: 'Total Users', message: (users | length) + ' active users in the system', details: 'Last login: ' + (users[0].lastLogin if users[0] else 'N/A') } %}
+      {% include "partials/alert.njk" with usersAlert %}
+      
+      {% set statusAlert = { type: 'success', title: 'System Status', message: 'All services operational', details: 'Uptime: 99.9% | Load: Low' } %}
+      {% include "partials/alert.njk" with statusAlert %}
+      
+      {% set tasksAlert = { type: 'warning', title: 'Pending Tasks', message: pendingTasks + ' tasks require attention', details: 'Review scheduled for tomorrow' } %}
+      {% include "partials/alert.njk" with tasksAlert %}
+      
+    </div>
+  {% endcall %}
+
+  {# Data table with partials #}
+  {% if tableData %}
+    {% call card("📋 Data Table Example") %}
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background: #f8f9fa;">
+              {% for header in tableData.headers %}
+                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">{{ header }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in tableData.rows %}
+              <tr>
+                {% for cell in row %}
+                  <td style="padding: 8px; border: 1px solid #ddd;">{{ cell }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      {# Pagination for table #}
+      {% if tableData.pagination %}
+        {% include "partials/pagination.njk" with tableData.pagination %}
+      {% endif %}
+    {% endcall %}
+  {% endif %}
+
+  {# Advanced filtering example #}
+  {% call card("🔍 Advanced Filtering") %}
+    <div class="filter-demo">
+      <h4>Users by Department:</h4>
+      {% set departments = users | groupby("department") %}
+      {% for department in departments %}
+        <div style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+          <h5 style="margin: 0 0 10px 0; color: #007bff;">{{ department.grouper | title }} ({{ department.list | length }})</h5>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            {% for user in department.list %}
+              <span style="background: white; padding: 5px 10px; border-radius: 12px; border: 1px solid #ddd; font-size: 0.9em;">
+                {{ user.name }}
+              </span>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endcall %}
+
+  {# Complex conditional rendering #}
+  {% call card("🎛️ Conditional Features") %}
+    <div class="feature-toggles">
+      {% set features = {
+        'beta_ui': { enabled: true, description: 'New UI Components' },
+        'advanced_search': { enabled: false, description: 'Advanced Search Filters' },
+        'real_time_updates': { enabled: true, description: 'Real-time Data Updates' },
+        'export_tools': { enabled: false, description: 'Data Export Tools' }
+      } %}
+      
+      {% for featureName, feature in features %}
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; margin: 5px 0; background: {{ 'rgba(40, 167, 69, 0.1)' if feature.enabled else 'rgba(108, 117, 125, 0.1)' }}; border-radius: 4px;">
+          <div>
+            <strong>{{ feature.description }}</strong>
+            <br>
+            <small style="color: #666;">{{ featureName }}</small>
+          </div>
+          <span style="padding: 4px 8px; border-radius: 12px; font-size: 0.8em; color: white; background: {{ '#28a745' if feature.enabled else '#6c757d' }};">
+            {{ 'Enabled' if feature.enabled else 'Disabled' }}
+          </span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endcall %}
+
+  {# JSON data visualization #}
+  {% call card("📄 Data Visualization") %}
+    <div class="data-viz">
+      <h4>Current Request Data:</h4>
+      <pre style="background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 0.9em;"><code>{{ {
+        timestamp: timestamp,
+        userAgent: 'Demo Browser',
+        currentUser: currentUser.name if currentUser else 'Anonymous',
+        queryParams: queryParams or {},
+        stats: {
+          totalUsers: users | length,
+          pendingTasks: pendingTasks,
+          systemLoad: 'Low'
+        }
+      } | dump(2) }}</code></pre>
+    </div>
+  {% endcall %}
+
+  {# Performance info #}
+  <div style="margin-top: 30px; padding: 20px; background: #e7f3ff; border-radius: 4px;">
+    <h3>🎯 Nunjucks Best Practices</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+      <div>
+        <h4>✅ Do:</h4>
+        <ul>
+          <li>Use partials for reusable components</li>
+          <li>Create macros for complex logic</li>
+          <li>Pass specific data with <code>with</code></li>
+          <li>Use filters for data transformation</li>
+          <li>Leverage template inheritance</li>
+        </ul>
+      </div>
+      <div>
+        <h4>❌ Avoid:</h4>
+        <ul>
+          <li>JavaScript syntax in templates</li>
+          <li>Complex logic in templates</li>
+          <li>Deeply nested includes</li>
+          <li>Global variables without context</li>
+          <li>Inline styles (use CSS classes)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Demo JavaScript for the advanced features
+console.log('Advanced Nunjucks demo loaded');
+
+// Mock functions for the demo buttons
+function viewUser(id) {
+  alert('Viewing user: ' + id);
+}
+
+function editUser(id) {
+  alert('Editing user: ' + id);
+}
+
+// Form submission handler
+document.addEventListener('DOMContentLoaded', function() {
+  const forms = document.querySelectorAll('form');
+  forms.forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('Form submitted! (This is a demo)');
+    });
+  });
+});
+</script>
+{% endblock %}

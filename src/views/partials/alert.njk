@@ -1,0 +1,34 @@
+{# Alert/Notification Partial #}
+{% set alertClass = {
+  'success': 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;',
+  'error': 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;',
+  'warning': 'background: #fff3cd; color: #856404; border: 1px solid #ffeaa7;',
+  'info': 'background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb;'
+} %}
+
+{% set alertIcon = {
+  'success': '✅',
+  'error': '❌',
+  'warning': '⚠️',
+  'info': 'ℹ️'
+} %}
+
+<div class="alert alert-{{ type or 'info' }}" style="{{ alertClass[type or 'info'] }} padding: 15px; border-radius: 4px; margin: 10px 0;">
+  <div style="display: flex; align-items: flex-start;">
+    <span style="margin-right: 10px; font-size: 1.2em;">{{ alertIcon[type or 'info'] }}</span>
+    <div style="flex: 1;">
+      {% if title %}
+        <h4 style="margin: 0 0 5px 0; font-size: 1.1em;">{{ title }}</h4>
+      {% endif %}
+      <div>{{ message }}</div>
+      {% if details %}
+        <div style="margin-top: 10px; font-size: 0.9em; opacity: 0.8;">
+          {{ details }}
+        </div>
+      {% endif %}
+    </div>
+    {% if dismissible %}
+      <button onclick="this.parentElement.parentElement.style.display='none'" style="background: none; border: none; font-size: 1.2em; cursor: pointer; opacity: 0.6;">×</button>
+    {% endif %}
+  </div>
+</div>

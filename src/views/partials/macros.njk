@@ -1,0 +1,84 @@
+{# Macro for creating form fields #}
+{% macro formField(type, name, label, value="", placeholder="", required=false, options=[]) %}
+  <div class="form-field" style="margin-bottom: 15px;">
+    <label for="{{ name }}" style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">
+      {{ label }}
+      {% if required %}<span style="color: red;">*</span>{% endif %}
+    </label>
+    
+    {% if type == "select" %}
+      <select name="{{ name }}" id="{{ name }}" {% if required %}required{% endif %}
+              style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+        <option value="">Choose {{ label.lower() }}...</option>
+        {% for option in options %}
+          <option value="{{ option.value }}" {% if option.value == value %}selected{% endif %}>
+            {{ option.label }}
+          </option>
+        {% endfor %}
+      </select>
+    {% elif type == "textarea" %}
+      <textarea name="{{ name }}" id="{{ name }}" placeholder="{{ placeholder }}" 
+                {% if required %}required{% endif %}
+                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; min-height: 100px; resize: vertical;">{{ value }}</textarea>
+    {% else %}
+      <input type="{{ type }}" name="{{ name }}" id="{{ name }}" value="{{ value }}" 
+             placeholder="{{ placeholder }}" {% if required %}required{% endif %}
+             style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{# Macro for creating buttons #}
+{% macro button(text, type="button", style="primary", size="medium", onclick="") %}
+  {% set styles = {
+    primary: "background: #007bff; color: white; border: 1px solid #007bff;",
+    secondary: "background: #6c757d; color: white; border: 1px solid #6c757d;",
+    success: "background: #28a745; color: white; border: 1px solid #28a745;",
+    danger: "background: #dc3545; color: white; border: 1px solid #dc3545;",
+    warning: "background: #ffc107; color: #212529; border: 1px solid #ffc107;",
+    info: "background: #17a2b8; color: white; border: 1px solid #17a2b8;"
+  } %}
+  
+  {% set sizes = {
+    small: "padding: 4px 8px; font-size: 12px;",
+    medium: "padding: 8px 16px; font-size: 14px;",
+    large: "padding: 12px 24px; font-size: 16px;"
+  } %}
+  
+  <button type="{{ type }}" 
+          {% if onclick %}onclick="{{ onclick }}"{% endif %}
+          style="{{ styles[style] }} {{ sizes[size] }} border-radius: 4px; cursor: pointer; transition: opacity 0.2s;"
+          onmouseover="this.style.opacity='0.8'" 
+          onmouseout="this.style.opacity='1'">
+    {{ text }}
+  </button>
+{% endmacro %}
+
+{# Macro for creating cards #}
+{% macro card(title, content, footer="", style="default") %}
+  {% set cardStyles = {
+    default: "border: 1px solid #ddd; background: white;",
+    primary: "border: 1px solid #007bff; background: #f8f9ff;",
+    success: "border: 1px solid #28a745; background: #f8fff8;",
+    warning: "border: 1px solid #ffc107; background: #fffdf8;",
+    danger: "border: 1px solid #dc3545; background: #fff8f8;"
+  } %}
+  
+  <div class="card" style="{{ cardStyles[style] }} border-radius: 8px; overflow: hidden; margin-bottom: 20px;">
+    {% if title %}
+      <div class="card-header" style="padding: 15px; border-bottom: 1px solid #eee; background: rgba(0,0,0,0.03);">
+        <h4 style="margin: 0; color: #333;">{{ title }}</h4>
+      </div>
+    {% endif %}
+    
+    <div class="card-body" style="padding: 15px;">
+      {{ content }}
+    </div>
+    
+    {% if footer %}
+      <div class="card-footer" style="padding: 10px 15px; border-top: 1px solid #eee; background: rgba(0,0,0,0.03); color: #666; font-size: 0.9em;">
+        {{ footer }}
+      </div>
+    {% endif %}
+  </div>
+{% endmacro %}

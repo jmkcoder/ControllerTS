@@ -252,4 +252,77 @@ export class HomeController extends Controller {
       }
     });
   }
+
+  // Method to demonstrate partial views with Nunjucks
+  @route('home/partials-demo')
+  async partialsDemo(): Promise<void> {
+    this.logger.log('Partials demo page accessed');
+    
+    const allUsers = this.userService.getAllUsers();
+    
+    // Add some sample users for demo
+    const sampleUsers = [
+      ...allUsers,
+      { id: 10, name: 'Alice Johnson', email: 'alice@example.com', department: 'Sales', role: 'Sales Rep' },
+      { id: 11, name: 'Mike Davis', email: 'mike@example.com', phone: '+1-555-0199', department: 'Engineering', role: 'Senior Dev' },
+      { id: 12, name: 'Sarah Wilson', email: 'sarah@example.com', department: 'HR', role: 'HR Manager' }
+    ];
+
+    await this.View('views/partials-demo.njk', {
+      title: 'Partial Views Demo',
+      allUsers: sampleUsers,
+      breadcrumbs: [
+        { title: 'Framework', url: '/home' },
+        { title: 'Demos', url: '/home/demo' },
+        { title: 'Partial Views' }
+      ]
+    });
+  }
+
+  // Method to demonstrate advanced Nunjucks features
+  @route('home/advanced-demo')
+  async advancedDemo(): Promise<void> {
+    this.logger.log('Advanced Nunjucks demo page accessed');
+    
+    const allUsers = this.userService.getAllUsers();
+    const currentUser = this.userService.getCurrentUser();
+    
+    // Enhanced sample data for advanced demo
+    const users = [
+      { id: 1, name: 'John Admin', email: 'john@example.com', department: 'IT', role: 'admin', lastLogin: '2024-01-15' },
+      { id: 2, name: 'Jane Smith', email: 'jane@example.com', department: 'Sales', role: 'user', lastLogin: '2024-01-14' },
+      { id: 3, name: 'Bob Wilson', email: 'bob@example.com', department: 'Engineering', role: 'user', lastLogin: '2024-01-13' },
+      { id: 4, name: 'Alice Johnson', email: 'alice@example.com', department: 'Sales', role: 'user', lastLogin: '2024-01-12' },
+      { id: 5, name: 'Mike Davis', email: 'mike@example.com', department: 'Engineering', role: 'admin', lastLogin: '2024-01-11' },
+      { id: 6, name: 'Sarah Wilson', email: 'sarah@example.com', department: 'HR', role: 'user', lastLogin: '2024-01-10' }
+    ];
+
+    const notifications = [
+      { type: 'success', title: 'Welcome!', message: 'You have successfully loaded the advanced demo page.', dismissible: true },
+      { type: 'info', message: 'This page demonstrates advanced Nunjucks templating features.' }
+    ];
+
+    const tableData = {
+      headers: ['ID', 'Name', 'Department', 'Role', 'Last Login'],
+      rows: users.map(user => [user.id, user.name, user.department, user.role, user.lastLogin]),
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: users.length,
+        itemsPerPage: 10,
+        baseUrl: '/home/advanced-demo'
+      }
+    };
+
+    await this.View('views/advanced-demo.njk', {
+      title: 'Advanced Nunjucks Demo',
+      timestamp: new Date().toISOString(),
+      users,
+      currentUser: currentUser || users[0], // Use first user as demo current user
+      notifications,
+      pendingTasks: 3,
+      tableData,
+      queryParams: this.getQueryParams()
+    });
+  }
 }
