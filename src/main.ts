@@ -7,7 +7,9 @@ import { Controller } from './core/controller';
 import { serviceContainer } from './core/serviceContainer';
 import { LoggerService, UserService, EmailService } from './services/exampleServices';
 import { ProductService } from './services/productService';
-import { RequestPipeline, LoggingMiddleware, ErrorHandlingMiddleware, DIScopeMiddleware, RequestContextMiddleware } from './core/requestPipeline';
+import { App } from './core/app';
+import { LoggingMiddleware, ErrorHandlingMiddleware, DIScopeMiddleware, RequestContextMiddleware } from './core/requestPipeline';
+import { AuthenticationMiddleware, PerformanceMiddleware, CorsMiddleware, ValidationMiddleware, CachingMiddleware, SecurityMiddleware } from './core/customMiddleware';
 import './style.css';
 
 // IMPORTANT: Register services using proper DI registration (no more factories needed!)
@@ -55,23 +57,25 @@ for (const [name, controllerClass] of discoveredControllers) {
     }
 }
 
-// Create and configure the request pipeline
-const pipeline = new RequestPipeline(serviceContainer, router);
+// Create the application
+const app = new App(serviceContainer, router);
 
-// Add middleware to the pipeline (order matters!)
-pipeline
-    .use(new ErrorHandlingMiddleware())      // Handle errors first
-    .use(new LoggingMiddleware())           // Log requests
-    .use(new DIScopeMiddleware())           // Setup DI scoping
-    .use(new RequestContextMiddleware());   // Add request context to DI
+// Configure middleware using the clean API (order matters!)
+app
+    .use(new ErrorHandlingMiddleware())      // 1. Handle errors first
+    .use(new CorsMiddleware())              // 2. CORS headers  
+    .use(new SecurityMiddleware())          // 3. Security headers
+    .use(new PerformanceMiddleware())       // 4. Performance monitoring (wraps request)
+    .use(new AuthenticationMiddleware())    // 5. Authentication check
+    .use(new ValidationMiddleware())        // 6. Request validation
+    .use(new CachingMiddleware())           // 7. Response caching
+    .use(new LoggingMiddleware())           // 8. Log requests
+    .use(new DIScopeMiddleware())           // 9. Setup DI scoping
+    .use(new RequestContextMiddleware());   // 10. Add request context to DI
 
-// Set up the pipeline handler in the router
-router.setPipelineHandler((url: string, method: string) => pipeline.processRequest(url, method));
+// Start the application
+app.start();
 
-// Initialize routing - now all routes will go through the pipeline
-router.init();
-
-// Make router, DI container, and pipeline available globally for debugging
-(window as any).router = router;
+// Make services available globally for debugging
 (window as any).serviceContainer = serviceContainer;
-(window as any).requestPipeline = pipeline;
+(window as any).app = app;
