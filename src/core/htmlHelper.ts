@@ -1,6 +1,7 @@
 import { ControllerManager } from './controllerManager';
 import { isObjectAction, getRegisteredRoutes } from './decorators';
 import { ActionValidator } from './actionValidator';
+import { ModelValidator } from './modelValidator';
 
 export class HtmlHelper {
   private static initialized = false;
@@ -76,6 +77,11 @@ export class HtmlHelper {
         return { success: true, data: result.data };
       }
       
+      // If the controller explicitly sets success: false, preserve that
+      if (result && typeof result === 'object' && result.hasOwnProperty('success')) {
+        return result;
+      }
+      
       // Return the processed result
       return { success: true, data: validation.processedResult };
     } catch (error) {
@@ -118,6 +124,9 @@ export class HtmlHelper {
           return { success: true, redirected: true, redirect: result };
         } else if (result.json) {
           return { success: true, data: result.data };
+        } else if (result.hasOwnProperty('success')) {
+          // If the controller explicitly sets success: false, preserve that
+          return result;
         }
       }
       
@@ -363,7 +372,21 @@ export class HtmlHelper {
             if (resultTarget) {
               const targetElement = document.getElementById(resultTarget);
               if (targetElement) {
+                // Always show the result target element
+                targetElement.classList.remove('d-none');
+                targetElement.style.display = 'block';
+                
                 if (result.success) {
+                  // Clear any existing validation errors on success
+                  target.querySelectorAll('.invalid-feedback').forEach((el: Element) => {
+                    console.log('🧹 Success: Removing validation message:', el);
+                    el.remove();
+                  });
+                  target.querySelectorAll('.is-invalid').forEach((el: Element) => {
+                    console.log('🧹 Success: Removing is-invalid class from:', el);
+                    el.classList.remove('is-invalid');
+                  });
+                  
                   const template = target.getAttribute('mvc-success-template') || 
                     (isObjectOnly ? 
                       `<div class="alert alert-success">Success: <pre>{{result}}</pre></div>` :
@@ -382,24 +405,107 @@ export class HtmlHelper {
                     .replace(/\{\{result\}\}/g, resultText);
                   
                   targetElement.innerHTML = processedTemplate;
+                  console.log('✅ Success: Updated result target with success message');
                   
                   // Reset form on success if specified
                   if (target.getAttribute('mvc-reset-on-success') === 'true') {
                     target.reset();
+                    console.log('✅ Success: Reset form');
                   }
                 } else {
-                  const errorTemplate = target.getAttribute('mvc-error-template') || 
-                    `<div class="alert alert-error">Error: {{error}}</div>`;
+                  console.log('🔍 Form validation failed, processing errors:', result.errors);
                   
-                  // More robust template replacement for form errors - handle HTML entities but preserve structure
-                  let processedErrorTemplate = errorTemplate;
-                  processedErrorTemplate = processedErrorTemplate
-                    .replace(/&\{&\{error&\}&\}/g, '{{error}}')  // Decode &{&{error&}&}
-                    .replace(/&#123;&#123;error&#125;&#125;/g, '{{error}}')  // Decode &#123;&#123;error&#125;&#125;
-                    .replace(/&lt;&lt;error&gt;&gt;/g, '{{error}}')  // Decode &lt;&lt;error&gt;&gt;
-                    .replace(/\{\{error\}\}/g, result.error || 'Unknown error');
-                  
-                  targetElement.innerHTML = processedErrorTemplate;
+                  // Handle validation errors - display them next to form fields
+                  if (result.errors && Array.isArray(result.errors)) {
+                    console.log('🔍 Processing', result.errors.length, 'validation errors');
+                    
+                    // Clear any existing validation messages
+                    target.querySelectorAll('.invalid-feedback').forEach((el: Element) => {
+                      console.log('🧹 Removing existing validation message:', el);
+                      el.remove();
+                    });
+                    
+                    // Clear any existing invalid classes
+                    target.querySelectorAll('.is-invalid').forEach((el: Element) => {
+                      console.log('🧹 Removing is-invalid class from:', el);
+                      el.classList.remove('is-invalid');
+                    });
+                    
+                    // Add validation errors to each field
+                    result.errors.forEach((error: any) => {
+                      const fieldName = error.property || error.field;
+                      const errorMessage = error.message || error.error;
+                      
+                      console.log('🔍 Processing error for field:', fieldName, 'Message:', errorMessage);
+                      
+                      if (fieldName && errorMessage) {
+                        // Find the input field
+                        const inputElement = target.querySelector(`[name="${fieldName}"]`) as HTMLElement;
+                        console.log('🔍 Found input element for', fieldName, ':', inputElement);
+                        
+                        if (inputElement) {
+                          // Add Bootstrap invalid class
+                          inputElement.classList.add('is-invalid');
+                          console.log('✅ Added is-invalid class to:', inputElement);
+                          
+                          // Create validation message element
+                          const validationDiv = document.createElement('div');
+                          validationDiv.className = 'invalid-feedback d-block';
+                          validationDiv.textContent = errorMessage;
+                          validationDiv.style.display = 'block';
+                          validationDiv.style.color = '#dc3545';
+                          validationDiv.style.fontSize = '0.875em';
+                          validationDiv.style.marginTop = '0.25rem';
+                          
+                          console.log('✅ Created validation div:', validationDiv);
+                          
+                          // Find the best place to insert the validation message
+                          let insertAfter = inputElement;
+                          
+                          // Check if there's a form-text element after the input
+                          const nextSibling = inputElement.nextElementSibling;
+                          if (nextSibling && nextSibling.classList.contains('form-text')) {
+                            insertAfter = nextSibling as HTMLElement;
+                          }
+                          
+                          // Insert validation message after the input (or form-text)
+                          insertAfter.parentNode?.insertBefore(validationDiv, insertAfter.nextSibling);
+                          console.log('✅ Inserted validation message after:', insertAfter);
+                        } else {
+                          console.warn('⚠️ Could not find input element for field:', fieldName);
+                        }
+                      }
+                    });
+                    
+                    // Update result target with general error message
+                    const errorTemplate = target.getAttribute('mvc-error-template') || 
+                      `<div class="alert alert-danger"><h4>Please correct the following errors:</h4><p>{{error}}</p></div>`;
+                    
+                    let processedErrorTemplate = errorTemplate;
+                    processedErrorTemplate = processedErrorTemplate
+                      .replace(/&\{&\{error&\}&\}/g, '{{error}}')  // Decode &{&{error&}&}
+                      .replace(/&#123;&#123;error&#125;&#125;/g, '{{error}}')  // Decode &#123;&#123;error&#125;&#125;
+                      .replace(/&lt;&lt;error&gt;&gt;/g, '{{error}}')  // Decode &lt;&lt;error&gt;&gt;
+                      .replace(/\{\{error\}\}/g, result.message || 'Validation failed');
+                    
+                    targetElement.innerHTML = processedErrorTemplate;
+                    console.log('✅ Updated result target with error message');
+                  } else {
+                    console.log('🔍 No errors array found, showing general error');
+                    
+                    // General error handling
+                    const errorTemplate = target.getAttribute('mvc-error-template') || 
+                      `<div class="alert alert-danger">Error: {{error}}</div>`;
+                    
+                    let processedErrorTemplate = errorTemplate;
+                    processedErrorTemplate = processedErrorTemplate
+                      .replace(/&\{&\{error&\}&\}/g, '{{error}}')  // Decode &{&{error&}&}
+                      .replace(/&#123;&#123;error&#125;&#125;/g, '{{error}}')  // Decode &#123;&#123;error&#125;&#125;
+                      .replace(/&lt;&lt;error&gt;&gt;/g, '{{error}}')  // Decode &lt;&lt;error&gt;&gt;
+                      .replace(/\{\{error\}\}/g, result.error || 'Unknown error');
+                    
+                    targetElement.innerHTML = processedErrorTemplate;
+                  }
                 }
               }
             }
@@ -435,8 +541,11 @@ export class HtmlHelper {
             }
           } finally {
             // Restore button state
-            submitButton.textContent = originalText;
-            submitButton.disabled = false;
+            if (submitButton) {
+              submitButton.textContent = originalText;
+              submitButton.disabled = false;
+              console.log('✅ Restored submit button state');
+            }
           }
         }
       }
@@ -460,6 +569,291 @@ export class HtmlHelper {
     
     // Make sure it's available globally after reinitialization
     (window as any).Html = HtmlHelper;
+  }
+
+  // ========== FORM HELPER METHODS (ASP.NET MVC Style) ==========
+
+  /**
+   * Creates an HTML form that submits to an MVC action
+   * @param action The action name
+   * @param controller The controller name (optional, defaults to current)
+   * @param options Form options including method, validation, etc.
+   * @returns HTML string for form opening tag
+   */
+  static BeginForm(action: string, controller?: string, options?: {
+    method?: 'GET' | 'POST';
+    htmlAttributes?: Record<string, any>;
+    validateAntiForgeryToken?: boolean;
+    resultTarget?: string;
+    successTemplate?: string;
+    errorTemplate?: string;
+    resetOnSuccess?: boolean;
+    loadingText?: string;
+  }): string {
+    const formOptions = {
+      method: 'POST',
+      htmlAttributes: {},
+      validateAntiForgeryToken: false,
+      ...options
+    };
+
+    const controllerName = controller || 'Home';
+    const methodAttr = formOptions.method.toLowerCase();
+    
+    // Build form attributes
+    const attrs: Record<string, string> = {
+      'mvc-controller': controllerName,
+      'mvc-action': action,
+      'method': methodAttr,
+      ...formOptions.htmlAttributes
+    };
+
+    // Add optional MVC attributes
+    if (formOptions.resultTarget) attrs['mvc-result-target'] = formOptions.resultTarget;
+    if (formOptions.successTemplate) attrs['mvc-success-template'] = formOptions.successTemplate;
+    if (formOptions.errorTemplate) attrs['mvc-error-template'] = formOptions.errorTemplate;
+    if (formOptions.resetOnSuccess) attrs['mvc-reset-on-success'] = 'true';
+    if (formOptions.loadingText) attrs['mvc-loading-text'] = formOptions.loadingText;
+
+    // Convert attributes to HTML string
+    const attrString = Object.entries(attrs)
+      .map(([key, value]) => `${key}="${this.escapeHtml(value)}"`)
+      .join(' ');
+
+    return `<form ${attrString}>`;
+  }
+
+  /**
+   * Closes the form tag
+   * @returns HTML string for form closing tag
+   */
+  static EndForm(): string {
+    return '</form>';
+  }
+
+  /**
+   * Creates a text input field with validation support
+   * @param name The field name
+   * @param value The field value
+   * @param modelClass Optional model class for validation attributes
+   * @param htmlAttributes Additional HTML attributes
+   * @returns HTML string for text input
+   */
+  static TextBox(name: string, value?: any, modelClass?: any, htmlAttributes?: Record<string, any>): string {
+    const attrs: Record<string, string> = {
+      type: 'text',
+      name: name,
+      id: name,
+      class: 'form-control',
+      ...htmlAttributes
+    };
+
+    if (value !== undefined && value !== null) {
+      attrs.value = String(value);
+    }
+
+    // Add validation attributes if model class provided
+    if (modelClass) {
+      const validationAttrs = ModelValidator.getValidationAttributes(modelClass, name);
+      Object.assign(attrs, validationAttrs);
+    }
+
+    const attrString = Object.entries(attrs)
+      .map(([key, val]) => `${key}="${this.escapeHtml(String(val))}"`)
+      .join(' ');
+
+    return `<input ${attrString}>`;
+  }
+
+  /**
+   * Creates an email input field with validation support
+   * @param name The field name
+   * @param value The field value
+   * @param modelClass Optional model class for validation attributes
+   * @param htmlAttributes Additional HTML attributes
+   * @returns HTML string for email input
+   */
+  static EmailBox(name: string, value?: any, modelClass?: any, htmlAttributes?: Record<string, any>): string {
+    const attrs = { type: 'email', autocomplete: 'email', ...htmlAttributes };
+    return this.TextBox(name, value, modelClass, attrs);
+  }
+
+  /**
+   * Creates a password input field with validation support
+   * @param name The field name
+   * @param modelClass Optional model class for validation attributes
+   * @param htmlAttributes Additional HTML attributes
+   * @returns HTML string for password input
+   */
+  static Password(name: string, modelClass?: any, htmlAttributes?: Record<string, any>): string {
+    const attrs = { type: 'password', autocomplete: 'new-password', ...htmlAttributes };
+    return this.TextBox(name, '', modelClass, attrs);
+  }
+
+  /**
+   * Creates a textarea field with validation support
+   * @param name The field name
+   * @param value The field value
+   * @param modelClass Optional model class for validation attributes
+   * @param htmlAttributes Additional HTML attributes
+   * @returns HTML string for textarea
+   */
+  static TextArea(name: string, value?: any, modelClass?: any, htmlAttributes?: Record<string, any>): string {
+    const attrs: Record<string, string> = {
+      name: name,
+      id: name,
+      class: 'form-control',
+      ...htmlAttributes
+    };
+
+    // Add validation attributes if model class provided
+    if (modelClass) {
+      const validationAttrs = ModelValidator.getValidationAttributes(modelClass, name);
+      Object.assign(attrs, validationAttrs);
+    }
+
+    const attrString = Object.entries(attrs)
+      .map(([key, val]) => `${key}="${this.escapeHtml(String(val))}"`)
+      .join(' ');
+
+    const textValue = value ? this.escapeHtml(String(value)) : '';
+
+    return `<textarea ${attrString}>${textValue}</textarea>`;
+  }
+
+  /**
+   * Creates a dropdown list (select) field
+   * @param name The field name
+   * @param options Array of {value, text} options or simple string array
+   * @param selectedValue The selected value
+   * @param htmlAttributes Additional HTML attributes
+   * @returns HTML string for select element
+   */
+  static DropDownList(name: string, options: Array<{value: any, text: string}> | string[], selectedValue?: any, htmlAttributes?: Record<string, any>): string {
+    const attrs: Record<string, string> = {
+      name: name,
+      id: name,
+      class: 'form-select',
+      ...htmlAttributes
+    };
+
+    const attrString = Object.entries(attrs)
+      .map(([key, val]) => `${key}="${this.escapeHtml(String(val))}"`)
+      .join(' ');
+
+    // Convert options to consistent format
+    const normalizedOptions = options.map(opt => {
+      if (typeof opt === 'string') {
+        return { value: opt, text: opt };
+      }
+      return opt;
+    });
+
+    const optionsHtml = normalizedOptions
+      .map(opt => {
+        const selected = opt.value == selectedValue ? ' selected' : '';
+        return `<option value="${this.escapeHtml(String(opt.value))}"${selected}>${this.escapeHtml(opt.text)}</option>`;
+      })
+      .join('');
+
+    return `<select ${attrString}>${optionsHtml}</select>`;
+  }
+
+  /**
+   * Creates a checkbox input field
+   * @param name The field name
+   * @param isChecked Whether the checkbox is checked
+   * @param htmlAttributes Additional HTML attributes
+   * @returns HTML string for checkbox input
+   */
+  static CheckBox(name: string, isChecked: boolean = false, htmlAttributes?: Record<string, any>): string {
+    const attrs: Record<string, string> = {
+      type: 'checkbox',
+      name: name,
+      id: name,
+      class: 'form-check-input',
+      ...htmlAttributes
+    };
+
+    if (isChecked) {
+      attrs.checked = 'checked';
+    }
+
+    const attrString = Object.entries(attrs)
+      .map(([key, val]) => `${key}="${this.escapeHtml(String(val))}"`)
+      .join(' ');
+
+    return `<input ${attrString}>`;
+  }
+
+  /**
+   * Creates a submit button
+   * @param text The button text
+   * @param htmlAttributes Additional HTML attributes
+   * @returns HTML string for submit button
+   */
+  static SubmitButton(text: string = 'Submit', htmlAttributes?: Record<string, any>): string {
+    const attrs: Record<string, string> = {
+      type: 'submit',
+      class: 'btn btn-primary',
+      ...htmlAttributes
+    };
+
+    const attrString = Object.entries(attrs)
+      .map(([key, val]) => `${key}="${this.escapeHtml(String(val))}"`)
+      .join(' ');
+
+    return `<button ${attrString}>${this.escapeHtml(text)}</button>`;
+  }
+
+  /**
+   * Creates a validation message for a specific field
+   * @param fieldName The field name
+   * @param modelState The current ModelState
+   * @returns HTML string for validation message
+   */
+  static ValidationMessage(fieldName: string, modelState?: any): string {
+    if (!modelState || !modelState.hasError || !modelState.hasError(fieldName)) {
+      return '';
+    }
+
+    const error = modelState.getError(fieldName);
+    return `<div class="invalid-feedback d-block">${this.escapeHtml(error)}</div>`;
+  }
+
+  /**
+   * Creates a validation summary for all model errors
+   * @param modelState The current ModelState
+   * @param message Optional header message
+   * @returns HTML string for validation summary
+   */
+  static ValidationSummary(modelState?: any, message?: string): string {
+    if (!modelState || !modelState.errors || modelState.errors.length === 0) {
+      return '';
+    }
+
+    const headerMessage = message || 'Please correct the following errors:';
+    const errorsHtml = modelState.errors
+      .map((error: any) => `<li>${this.escapeHtml(error.message)}</li>`)
+      .join('');
+
+    return `
+      <div class="alert alert-danger">
+        <h5>${this.escapeHtml(headerMessage)}</h5>
+        <ul class="mb-0">${errorsHtml}</ul>
+      </div>
+    `;
+  }
+
+  /**
+   * Escapes HTML special characters
+   * @param text The text to escape
+   * @returns Escaped HTML string
+   */
+  private static escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 }
 

@@ -36,7 +36,8 @@ export class HomeController extends Controller {
           '🏗️ MVC architecture pattern',
           '📝 Nunjucks templating',
           '🚀 TypeScript support',
-          '📱 Clean URLs with History API'
+          '📱 Clean URLs with History API',
+          '✅ Model validation with decorators'
         ]
    });
   }
@@ -81,6 +82,8 @@ export class HomeController extends Controller {
   // Another demo method for form submission
   @action('submit')
   async submitForm(formData: any): Promise<any> {
+    
+    // If validation passes, process the form
     return {
       success: true,
       message: 'Form submitted successfully!',
@@ -443,5 +446,122 @@ export class HomeController extends Controller {
       title: 'HtmlHelper with Object Actions Demo',
       subtitle: 'Demonstrating the updated HtmlHelper with support for @objectAction decorators'
     });
+  }
+
+  // Model validation demo page
+  @action('validation-demo')
+  async validationDemo(): Promise<void> {
+    this.logger.log('Model validation demo page accessed');
+    
+    // Import models for the demo
+    const { UserRegistrationModel, ContactFormModel } = await import('../models/sampleModels');
+    
+    await this.View('views/validation-demo.njk', {
+      title: 'Model Validation Demo',
+      subtitle: 'Demonstrating ASP.NET Core style model validation with decorators',
+      userModel: new UserRegistrationModel(),
+      contactModel: new ContactFormModel()
+    });
+  }
+
+  // Handle user registration form submission
+  @action('registerUser')
+  async registerUser(formData: any): Promise<any> {
+    const { UserRegistrationModel } = await import('../models/sampleModels');
+    
+    console.log('👤 User registration attempt:', formData);
+    
+    // Validate the registration data
+    if (!this.tryValidateFormData(UserRegistrationModel, formData)) {
+      console.log('❌ Registration validation failed:', this.ModelState.errors);
+      
+      // For AJAX requests (like HtmlHelper forms), return JSON
+      return {
+        success: false,
+        message: 'Registration validation failed',
+        errors: this.ModelState.errors.map(error => ({
+          property: error.propertyName,
+          message: error.message
+        })),
+        formData: formData
+      };
+    }
+    
+    // Add custom business logic validation
+    if (formData.username === 'admin') {
+      this.addModelError('username', 'Username "admin" is reserved and cannot be used');
+      
+      return {
+        success: false,
+        message: 'Registration validation failed',
+        errors: this.ModelState.errors.map(error => ({
+          property: error.propertyName,
+          message: error.message
+        })),
+        formData: formData
+      };
+    }
+    
+    console.log('✅ User registration successful!');
+    
+    // Registration successful - return JSON for AJAX, or could render view for regular form posts
+    return {
+      success: true,
+      message: 'Registration successful!',
+      userData: formData
+    };
+  }
+
+  // Handle contact form submission
+  @action('contact')
+  async submitContact(formData: any): Promise<any> {
+    const { ContactFormModel } = await import('../models/sampleModels');
+    
+    console.log('📧 Contact form submission:', formData);
+    
+    // Validate the contact form data
+    if (!this.tryValidateFormData(ContactFormModel, formData)) {
+      console.log('❌ Contact form validation failed:', this.ModelState.errors);
+      
+      return {
+        success: false,
+        message: 'Please correct the errors in the form',
+        errors: this.ModelState.errors.map(error => ({
+          property: error.propertyName,
+          message: error.message
+        })),
+        formData: formData
+      };
+    }
+    
+    // Add custom validation for phone number if contact method is phone
+    if (formData.contactMethod === 'phone' && !formData.phone) {
+      this.addModelError('phone', 'Phone number is required when contact method is phone');
+      
+      return {
+        success: false,
+        message: 'Please correct the errors in the form',
+        errors: this.ModelState.errors.map(error => ({
+          property: error.propertyName,
+          message: error.message
+        })),
+        formData: formData
+      };
+    }
+    
+    console.log('✅ Contact form submitted successfully!');
+    
+    // Simulate sending email (would integrate with EmailService in real app)
+    // Note: In a real app, you'd have a proper contact email service
+    this.logger.log(`Contact form submitted by ${formData.name} (${formData.email}): ${formData.subject}`);
+    
+    return {
+      success: true,
+      message: 'Thank you! Your message has been sent successfully.',
+      data: {
+        confirmationNumber: `CF-${Date.now()}`,
+        submittedAt: new Date().toISOString()
+      }
+    };
   }
 }

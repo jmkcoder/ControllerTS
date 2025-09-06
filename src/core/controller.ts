@@ -1,15 +1,62 @@
 import { ViewEngine } from "./viewEngine";
 import { serviceContainer } from "./serviceContainer";
+import { ModelValidator, ModelState } from "./modelValidator";
 
 export class Controller {
   [key: string]: any; // Allow dynamic method access
   private static routerInstance: any = null;
   protected queryParams: Record<string, string> = {};
   protected queryParamsRaw: URLSearchParams = new URLSearchParams();
+  protected modelState: ModelState = new ModelState(); // Model validation state
 
   constructor() {
     // Initialize services from DI container if available
     this.initializeServices();
+  }
+
+  /**
+   * Gets the current ModelState (like ASP.NET Core's ModelState)
+   */
+  protected get ModelState(): ModelState {
+    return this.modelState;
+  }
+
+  /**
+   * Validates a model and updates the ModelState
+   * @param model The model instance to validate
+   * @returns True if valid, false otherwise
+   */
+  protected tryValidateModel(model: any): boolean {
+    this.modelState = ModelValidator.validate(model);
+    return this.modelState.isValid;
+  }
+
+  /**
+   * Validates form data against a model class and updates the ModelState
+   * @param modelClass The model class constructor
+   * @param formData The form data to validate
+   * @returns True if valid, false otherwise
+   */
+  protected tryValidateFormData(modelClass: new () => any, formData: any): boolean {
+    this.modelState = ModelValidator.validateFormData(modelClass, formData);
+    return this.modelState.isValid;
+  }
+
+  /**
+   * Clears the current ModelState
+   */
+  protected clearModelState(): void {
+    this.modelState = new ModelState();
+  }
+
+  /**
+   * Adds a custom model error
+   * @param propertyName The property name (empty string for model-level errors)
+   * @param errorMessage The error message
+   * @param attemptedValue The attempted value (optional)
+   */
+  protected addModelError(propertyName: string, errorMessage: string, attemptedValue?: any): void {
+    this.modelState.addError(propertyName, errorMessage, attemptedValue);
   }
 
   /**
@@ -101,7 +148,17 @@ export class Controller {
   }
 
   protected async View(viewPath: string, data?: Record<string, any>): Promise<void> {
-    await ViewEngine.View(viewPath, data);
+    // Add ModelState and validation helpers to view data
+    const viewData = {
+      ...data,
+      ModelState: this.modelState,
+      ValidationSummary: ModelValidator.createValidationSummary(this.modelState),
+      // Helper function for validation attributes (can be used in templates)
+      ValidationAttributes: (modelClass: any, propertyName: string) => 
+        ModelValidator.getValidationAttributes(modelClass, propertyName)
+    };
+    
+    await ViewEngine.View(viewPath, viewData);
   }
 
   /**

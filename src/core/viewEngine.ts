@@ -93,9 +93,15 @@ export class ViewEngine {
       // Convert view path to template path
       const templatePath = viewPath.startsWith('/') ? viewPath.substring(1) : viewPath;
       
+      // Add HtmlHelper to the template context
+      const templateContext = {
+        ...context,
+        Html: HtmlHelper // Make HtmlHelper available in templates
+      };
+      
       // Use Nunjucks to render the template
       return new Promise((resolve, reject) => {
-        env.render(templatePath, context, (err, result) => {
+        env.render(templatePath, templateContext, (err, result) => {
           if (err) {
             console.error('Nunjucks rendering error:', err);
             reject(err);
