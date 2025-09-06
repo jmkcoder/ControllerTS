@@ -3,6 +3,8 @@ import { controller, action, objectAction } from '../core/decorators';
 import { Injectable } from '../core/diDecorators';
 import { AutoRegister } from '../core/controllerDiscovery';
 import { UserService, LoggerService, EmailService } from '../services/exampleServices';
+import { ModelValidator } from '../core/modelValidator';
+import { UserRegistrationModel } from '../models/sampleModels';
 
 @AutoRegister
 @Injectable
@@ -464,51 +466,43 @@ export class HomeController extends Controller {
     });
   }
 
-  // Handle user registration form submission
+  // Handle user registration form submission with automatic model binding
   @action('registerUser')
-  async registerUser(formData: any): Promise<any> {
-    const { UserRegistrationModel } = await import('../models/sampleModels');
+  async registerUser(userModel: UserRegistrationModel): Promise<any> {
     
-    console.log('👤 User registration attempt:', formData);
-    
-    // Validate the registration data
-    if (!this.tryValidateFormData(UserRegistrationModel, formData)) {
-      console.log('❌ Registration validation failed:', this.ModelState.errors);
+    if (!this.Model.IsValid) {
       
-      // For AJAX requests (like HtmlHelper forms), return JSON
       return {
         success: false,
         message: 'Registration validation failed',
-        errors: this.ModelState.errors.map(error => ({
+        errors: this.ModelState.errors.map((error: any) => ({
           property: error.propertyName,
           message: error.message
         })),
-        formData: formData
+        formData: userModel
       };
     }
     
     // Add custom business logic validation
-    if (formData.username === 'admin') {
-      this.addModelError('username', 'Username "admin" is reserved and cannot be used');
-      
+    if (userModel.username === 'admin') {
       return {
         success: false,
         message: 'Registration validation failed',
-        errors: this.ModelState.errors.map(error => ({
-          property: error.propertyName,
-          message: error.message
-        })),
-        formData: formData
+        errors: [{ property: 'username', message: 'Username "admin" is reserved and cannot be used' }],
+        formData: userModel
       };
     }
     
-    console.log('✅ User registration successful!');
-    
-    // Registration successful - return JSON for AJAX, or could render view for regular form posts
     return {
       success: true,
       message: 'Registration successful!',
-      userData: formData
+      userData: {
+        firstName: userModel.firstName,
+        lastName: userModel.lastName,
+        username: userModel.username,
+        email: userModel.email,
+        department: userModel.department
+      }
     };
   }
 
@@ -517,11 +511,11 @@ export class HomeController extends Controller {
   async submitContact(formData: any): Promise<any> {
     const { ContactFormModel } = await import('../models/sampleModels');
     
-    console.log('📧 Contact form submission:', formData);
+    // Create and validate the model (just like .NET MVC)
+    const contactModel = this.createModel(ContactFormModel, formData);
     
-    // Validate the contact form data
-    if (!this.tryValidateFormData(ContactFormModel, formData)) {
-      console.log('❌ Contact form validation failed:', this.ModelState.errors);
+    // Check ModelState.IsValid (just like .NET MVC)
+    if (!this.ModelState.IsValid) {
       
       return {
         success: false,
@@ -535,7 +529,7 @@ export class HomeController extends Controller {
     }
     
     // Add custom validation for phone number if contact method is phone
-    if (formData.contactMethod === 'phone' && !formData.phone) {
+    if (contactModel.contactMethod === 'phone' && !contactModel.phone) {
       this.addModelError('phone', 'Phone number is required when contact method is phone');
       
       return {
@@ -549,11 +543,9 @@ export class HomeController extends Controller {
       };
     }
     
-    console.log('✅ Contact form submitted successfully!');
-    
     // Simulate sending email (would integrate with EmailService in real app)
     // Note: In a real app, you'd have a proper contact email service
-    this.logger.log(`Contact form submitted by ${formData.name} (${formData.email}): ${formData.subject}`);
+    this.logger.log(`Contact form submitted by ${contactModel.name} (${contactModel.email}): ${contactModel.subject}`);
     
     return {
       success: true,

@@ -2,6 +2,7 @@ import type { Controller } from './controller';
 import { serviceContainer } from './serviceContainer';
 import { isObjectAction } from './decorators';
 import { ActionValidator } from './actionValidator';
+import { callActionWithBinding } from './parameterBinding';
 
 export class ControllerManager {
   private static controllers: Record<string, any> = {};
@@ -48,8 +49,8 @@ export class ControllerManager {
       throw new Error(`Action '${actionName}' not found in controller '${controllerName}'. Available methods: ${Object.getOwnPropertyNames(Object.getPrototypeOf(controller)).filter(name => name !== 'constructor' && typeof controller[name] === 'function').join(', ')}`);
     }
 
-    // Execute the action
-    const result = await action.call(controller, data);
+    // Use automatic parameter binding and validation
+    const result = await callActionWithBinding(controller, actionName, data);
     
     // Validate the result
     const validation = ActionValidator.validateActionResult(controllerName, actionName, result);

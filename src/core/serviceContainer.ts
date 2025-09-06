@@ -280,7 +280,6 @@ export class ServiceContainer {
                             dependencies.push(resolvedDependency);
                         } else {
                             console.warn(`✗ Could not resolve dependency: ${paramName}`);
-                            console.log(`Available services: ${registeredServices.map(s => s.name).join(', ')}`);
                             dependencies.push(undefined);
                         }
                     }

@@ -379,11 +379,9 @@ export class HtmlHelper {
                 if (result.success) {
                   // Clear any existing validation errors on success
                   target.querySelectorAll('.invalid-feedback').forEach((el: Element) => {
-                    console.log('🧹 Success: Removing validation message:', el);
                     el.remove();
                   });
                   target.querySelectorAll('.is-invalid').forEach((el: Element) => {
-                    console.log('🧹 Success: Removing is-invalid class from:', el);
                     el.classList.remove('is-invalid');
                   });
                   
@@ -405,29 +403,23 @@ export class HtmlHelper {
                     .replace(/\{\{result\}\}/g, resultText);
                   
                   targetElement.innerHTML = processedTemplate;
-                  console.log('✅ Success: Updated result target with success message');
                   
                   // Reset form on success if specified
                   if (target.getAttribute('mvc-reset-on-success') === 'true') {
                     target.reset();
-                    console.log('✅ Success: Reset form');
                   }
                 } else {
-                  console.log('🔍 Form validation failed, processing errors:', result.errors);
                   
                   // Handle validation errors - display them next to form fields
                   if (result.errors && Array.isArray(result.errors)) {
-                    console.log('🔍 Processing', result.errors.length, 'validation errors');
                     
                     // Clear any existing validation messages
                     target.querySelectorAll('.invalid-feedback').forEach((el: Element) => {
-                      console.log('🧹 Removing existing validation message:', el);
                       el.remove();
                     });
                     
                     // Clear any existing invalid classes
                     target.querySelectorAll('.is-invalid').forEach((el: Element) => {
-                      console.log('🧹 Removing is-invalid class from:', el);
                       el.classList.remove('is-invalid');
                     });
                     
@@ -436,17 +428,13 @@ export class HtmlHelper {
                       const fieldName = error.property || error.field;
                       const errorMessage = error.message || error.error;
                       
-                      console.log('🔍 Processing error for field:', fieldName, 'Message:', errorMessage);
-                      
                       if (fieldName && errorMessage) {
                         // Find the input field
                         const inputElement = target.querySelector(`[name="${fieldName}"]`) as HTMLElement;
-                        console.log('🔍 Found input element for', fieldName, ':', inputElement);
                         
                         if (inputElement) {
                           // Add Bootstrap invalid class
                           inputElement.classList.add('is-invalid');
-                          console.log('✅ Added is-invalid class to:', inputElement);
                           
                           // Create validation message element
                           const validationDiv = document.createElement('div');
@@ -456,8 +444,6 @@ export class HtmlHelper {
                           validationDiv.style.color = '#dc3545';
                           validationDiv.style.fontSize = '0.875em';
                           validationDiv.style.marginTop = '0.25rem';
-                          
-                          console.log('✅ Created validation div:', validationDiv);
                           
                           // Find the best place to insert the validation message
                           let insertAfter = inputElement;
@@ -470,7 +456,6 @@ export class HtmlHelper {
                           
                           // Insert validation message after the input (or form-text)
                           insertAfter.parentNode?.insertBefore(validationDiv, insertAfter.nextSibling);
-                          console.log('✅ Inserted validation message after:', insertAfter);
                         } else {
                           console.warn('⚠️ Could not find input element for field:', fieldName);
                         }
@@ -489,10 +474,7 @@ export class HtmlHelper {
                       .replace(/\{\{error\}\}/g, result.message || 'Validation failed');
                     
                     targetElement.innerHTML = processedErrorTemplate;
-                    console.log('✅ Updated result target with error message');
                   } else {
-                    console.log('🔍 No errors array found, showing general error');
-                    
                     // General error handling
                     const errorTemplate = target.getAttribute('mvc-error-template') || 
                       `<div class="alert alert-danger">Error: {{error}}</div>`;
@@ -544,7 +526,6 @@ export class HtmlHelper {
             if (submitButton) {
               submitButton.textContent = originalText;
               submitButton.disabled = false;
-              console.log('✅ Restored submit button state');
             }
           }
         }

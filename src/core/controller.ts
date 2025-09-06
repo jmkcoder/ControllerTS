@@ -17,12 +17,36 @@ export class Controller {
   /**
    * Gets the current ModelState (like ASP.NET Core's ModelState)
    */
-  protected get ModelState(): ModelState {
-    return this.modelState;
+  protected get ModelState(): ModelState & { IsValid: boolean } {
+    return Object.assign(this.modelState, {
+      IsValid: this.modelState.isValid
+    });
   }
 
   /**
-   * Validates a model and updates the ModelState
+   * Provides .NET MVC-like Model access with automatic validation
+   * Usage: if (!this.Model.IsValid) { ... }
+   */
+  protected get Model(): { IsValid: boolean; Errors: any[]; validate(obj: any): boolean } {
+    return {
+      IsValid: this.modelState.isValid,
+      Errors: this.modelState.errors,
+      validate: (obj: any) => {
+        const validationResult = ModelValidator.validate(obj);
+        if (!validationResult.isValid) {
+          // Clear existing errors and add new validation errors
+          this.modelState = validationResult;
+          return false;
+        }
+        // Clear errors if validation passes
+        this.clearModelState();
+        return true;
+      }
+    };
+  }
+
+  /**
+   * Validates any model and updates the ModelState
    * @param model The model instance to validate
    * @returns True if valid, false otherwise
    */
@@ -39,6 +63,40 @@ export class Controller {
    */
   protected tryValidateFormData(modelClass: new () => any, formData: any): boolean {
     this.modelState = ModelValidator.validateFormData(modelClass, formData);
+    return this.modelState.isValid;
+  }
+
+  /**
+   * Creates a model instance from form data and validates it
+   * Updates ModelState automatically
+   * @param modelClass The model class constructor
+   * @param formData The form data to bind and validate
+   * @returns The created model instance
+   */
+  protected createModel<T extends object>(modelClass: new () => T, formData: any): T {
+    const model = new modelClass();
+    
+    // Bind form data to model properties
+    Object.keys(formData).forEach(key => {
+      if (key in model) {
+        (model as any)[key] = formData[key];
+      }
+    });
+    
+    // Validate the model and update ModelState
+    this.tryValidateModel(model);
+    
+    return model;
+  }
+
+  /**
+   * Validates any object (with or without extending Model class)
+   * Updates ModelState automatically
+   * @param obj The object to validate
+   * @returns True if valid, false otherwise
+   */
+  protected validateObject(obj: any): boolean {
+    this.modelState = ModelValidator.validate(obj);
     return this.modelState.isValid;
   }
 

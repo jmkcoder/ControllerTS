@@ -51,7 +51,6 @@ export class PerformanceMiddleware implements Middleware {
         } catch (error) {
             const endTime = performance.now();
             const duration = endTime - startTime;
-            console.log(`❌ Perf: Request ${context.path} failed after ${duration.toFixed(2)}ms`);
             throw error; // Re-throw to maintain error handling
         }
     }

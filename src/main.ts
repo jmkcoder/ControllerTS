@@ -12,6 +12,8 @@ import { LoggingMiddleware, ErrorHandlingMiddleware, DIScopeMiddleware, RequestC
 import { AuthenticationMiddleware, PerformanceMiddleware, CorsMiddleware, ValidationMiddleware, CachingMiddleware, SecurityMiddleware } from './core/customMiddleware';
 import { AutoControllerLoader } from './core/autoControllerLoader';
 import { processControllerRoutes } from './core/decorators';
+import { registerActionParameters } from './core/parameterBinding';
+import { UserRegistrationModel, ContactFormModel } from './models/sampleModels';
 import './style.css';
 
 async function initializeApplication() {
@@ -35,6 +37,11 @@ async function initializeApplication() {
     
     // Process controller routes from @controller/@action decorators
     processControllerRoutes();
+
+    // WORKAROUND: Manually register parameter types since Vite/ESBuild doesn't support reflection metadata
+    // Register strongly typed parameters for actions that need automatic model binding
+    registerActionParameters('HomeController', 'registerUser', [UserRegistrationModel]);
+    registerActionParameters('HomeController', 'submitContact', [ContactFormModel]);
 
     // Initialize HtmlHelper for MVC attributes immediately
     HtmlHelper.initializeMvcAttributes();

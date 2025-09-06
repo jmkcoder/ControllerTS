@@ -55,6 +55,15 @@ export class ModelState implements ValidationResult {
         this._errors.push(...errors);
     }
 
+    /**
+     * Update this ModelState with errors from another validation result
+     */
+    updateFromValidationResult(validationResult: ValidationResult): void {
+        if (!validationResult.isValid) {
+            this._errors.push(...validationResult.errors);
+        }
+    }
+
     clear(): void {
         this._errors = [];
     }
@@ -83,15 +92,11 @@ export class ModelValidator {
 
         // Get validation rules from the model's prototype
         const rules = getValidationRules(Object.getPrototypeOf(model));
-        
-        console.log(`🔍 ModelValidator: Validating model with ${rules.length} rules`);
 
         for (const rule of rules) {
             try {
                 const propertyValue = model[rule.propertyName];
                 const isValid = rule.validate(propertyValue, model);
-                
-                console.log(`🔍 ModelValidator: Property ${rule.propertyName} = ${propertyValue}, Rule: ${rule.validatorName}, Valid: ${isValid}`);
                 
                 if (!isValid) {
                     errors.push({
@@ -111,7 +116,6 @@ export class ModelValidator {
         }
 
         const modelState = new ModelState(errors);
-        console.log(`✅ ModelValidator: Validation complete. IsValid: ${modelState.isValid}, Errors: ${errors.length}`);
         
         return modelState;
     }

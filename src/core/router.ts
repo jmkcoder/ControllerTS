@@ -96,50 +96,35 @@ export class Router {
    * Route a specific path (used by request pipeline)
    */
   async routePath(path: string): Promise<void> {
-    console.log('🛤️ Router: routePath called with path:', path);
     
     // Handle root path with default route
     const cleanPath = this.getCleanPath(path);
-    console.log('🛤️ Router: Clean path:', cleanPath);
     
     // Parse query parameters from current request context or URL
     if (this.currentRequestContext) {
-      console.log('🛤️ Router: Using request context for query params');
       this.currentQueryParams = new URLSearchParams();
       Object.entries(this.currentRequestContext.queryParams).forEach(([key, value]) => {
         this.currentQueryParams.set(key, value);
       });
     } else {
-      console.log('🛤️ Router: Using window.location.search for query params');
       this.currentQueryParams = new URLSearchParams(window.location.search);
     }
     
     const queryParamsObject = Object.fromEntries(this.currentQueryParams.entries());
-    console.log('🛤️ Router: Query params object:', queryParamsObject);
 
-    console.log('🛤️ Router: Calling executeRoute...');
     await this.executeRoute(cleanPath, queryParamsObject);
-    console.log('🛤️ Router: executeRoute completed');
   }
 
   init() {
-    console.log('🚀 Router: Initializing router with popstate listener...');
     
     // Remove any existing popstate listeners to prevent duplicates
     const existingListeners = (window as any).__routerPopstateListeners || [];
     existingListeners.forEach((listener: any) => {
-      console.log('🗑️ Router: Removing existing popstate listener');
       window.removeEventListener('popstate', listener);
     });
     
     // Create new popstate handler
     const popstateHandler = (event: PopStateEvent) => {
-      console.log('🔄 Router: popstate event triggered!', {
-        url: window.location.href,
-        state: event.state,
-        path: window.location.pathname,
-        search: window.location.search
-      });
       this.routeViaPipeline();
     };
     
@@ -148,7 +133,6 @@ export class Router {
     
     // Use HTML5 History API instead of hash-based routing
     window.addEventListener('popstate', popstateHandler);
-    console.log('✅ Router: popstate listener attached');
     
     // Handle initial route on page load
     this.routeViaPipeline();
@@ -157,24 +141,16 @@ export class Router {
   }
 
   private async routeViaPipeline() {
-    console.log('🔄 Router: routeViaPipeline called');
-    console.log('🔄 Router: Current URL:', window.location.href);
-    console.log('🔄 Router: History length:', window.history.length);
-    console.log('🔄 Router: History state:', window.history.state);
     
     const url = window.location.pathname + window.location.search;
     if (this.pipelineHandler) {
-      console.log('🔄 Router: using pipeline handler for URL:', url);
       try {
         await this.pipelineHandler(url, 'GET');
-        console.log('✅ Router: pipeline handler completed successfully');
       } catch (error) {
-        console.error('❌ Router: pipeline handler failed:', error);
         // Fallback to direct routing
         await this.route();
       }
     } else {
-      console.log('⚠️ Router: no pipeline handler, using fallback routing');
       // Fallback to direct routing if pipeline not set up yet
       await this.route();
     }
@@ -195,22 +171,16 @@ export class Router {
    * Execute route logic (shared between route() and routePath())
    */
   private async executeRoute(path: string, queryParamsObject: Record<string, string>) {
-    console.log('🎯 Router: executeRoute called with path:', path, 'queryParams:', queryParamsObject);
     
     // First, check decorator routes
     const decoratorRoutes = getRegisteredRoutes();
-    console.log('🎯 Router: Checking decorator routes, available routes:', Array.from(decoratorRoutes.keys()));
     
     if (decoratorRoutes.has(path)) {
-      console.log('🎯 Router: Found decorator route for path:', path);
       const routeInfo = decoratorRoutes.get(path)!;
-      console.log('🎯 Router: Route info:', routeInfo);
 
       const controller = this.createController(routeInfo.controller, queryParamsObject);
-      console.log('🎯 Router: Controller created:', controller.constructor.name);
       
       if (typeof controller[routeInfo.action] === 'function') {
-        console.log('🎯 Router: Executing action:', routeInfo.action);
         // Execute the action and get result
         let result: any;
         const actionMethod = controller[routeInfo.action];
@@ -219,7 +189,6 @@ export class Router {
         } else {
           result = await controller[routeInfo.action]();
         }
-        console.log('🎯 Router: Action executed, result:', result);
         
         // Handle the result based on action type
         await this.handleActionResult(
@@ -228,9 +197,7 @@ export class Router {
           result,
           routeInfo.actionType
         );
-        console.log('🎯 Router: Action result handled');
       } else {
-        console.log('❌ Router: Action method not found:', routeInfo.action);
         this.handle404();
       }
       return;
@@ -355,8 +322,6 @@ export class Router {
       try {
         controller = this.currentRequestContext.services.getService(ControllerClass as any);
       } catch (error) {
-        console.error(`Failed to create controller ${ControllerClass.name} through DI:`, error);
-        console.log('DI container details:', this.currentRequestContext.services);
         throw new Error(`Cannot create controller ${ControllerClass.name} - DI container failed and no parameterless constructor available`);
       }
     } else {
@@ -403,22 +368,15 @@ export class Router {
    * Navigate to a new route using History API
    */
   navigateTo(path: string) {
-    console.log('🧭 Router: navigateTo called with path:', path);
-    console.log('🧭 Router: Current location:', window.location.pathname + window.location.search);
-    
     // Only update history if the path is different (ignore hash changes)
     const currentPath = window.location.pathname + window.location.search;
     try {
       if (path !== currentPath) {
-        console.log('🧭 Router: Pushing new state to history:', path);
         window.history.pushState({ path, timestamp: Date.now() }, '', path);
-        console.log('🧭 Router: History state pushed, calling routeViaPipeline...');
         this.routeViaPipeline();
       } else {
-        console.log('🧭 Router: Path is same as current, not pushing state');
       }
     } catch (error) {
-      console.error('🧭 Router: Error in navigateTo:', error);
       this.routeViaPipeline(); // Re-render current route to maintain app state
     }
   }

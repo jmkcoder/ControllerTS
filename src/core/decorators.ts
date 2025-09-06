@@ -7,6 +7,9 @@ export const controllerRegistry: Map<any, { baseRoute: string; actions: Map<stri
 // Store for action types
 export const actionTypeRegistry: Map<string, 'view' | 'object'> = new Map();
 
+// Store for action parameter metadata
+export const actionParameterRegistry: Map<string, any[]> = new Map();
+
 /**
  * Controller decorator - defines the base route for a controller
  * @param baseRoute - The base route path (e.g., "admin", "api/users")
@@ -55,6 +58,14 @@ export function action(actionRoute: string = '', method: string = 'GET') {
       actionType: 'view'
     });
     
+    // Store parameter type metadata for automatic binding
+    const paramTypes = (Reflect as any).getMetadata?.('design:paramtypes', target, propertyKey) || [];
+    
+    if (paramTypes.length > 0) {
+      const actionKey = `${constructor.name}.${propertyKey}`;
+      actionParameterRegistry.set(actionKey, paramTypes);
+    }
+    
     // Build full route path
     const baseRoute = controllerMeta.baseRoute;
     const fullRoute = baseRoute && actionRoute 
@@ -98,6 +109,13 @@ export function objectAction(actionRoute: string = '', method: string = 'GET') {
       method: method.toUpperCase(),
       actionType: 'object'
     });
+    
+    // Store parameter type metadata for automatic binding
+    const paramTypes = (Reflect as any).getMetadata?.('design:paramtypes', target, propertyKey) || [];
+    if (paramTypes.length > 0) {
+      const actionKey = `${constructor.name}.${propertyKey}`;
+      actionParameterRegistry.set(actionKey, paramTypes);
+    }
     
     // Build full route path
     const baseRoute = controllerMeta.baseRoute;
@@ -164,6 +182,28 @@ export function isObjectAction(controllerName: string, actionName: string): bool
 export function getActionType(controllerName: string, actionName: string): 'view' | 'object' | undefined {
   const actionKey = `${controllerName}.${actionName}`;
   return actionTypeRegistry.get(actionKey);
+}
+
+/**
+ * Get parameter types for a specific action
+ */
+export function getActionParameterTypes(controllerName: string, actionName: string): any[] | undefined {
+  // Try multiple naming conventions
+  const possibleKeys = [
+    `${controllerName}.${actionName}`,
+    `${controllerName}Controller.${actionName}`,
+    `${controllerName.charAt(0).toUpperCase() + controllerName.slice(1)}.${actionName}`,
+    `${controllerName.charAt(0).toUpperCase() + controllerName.slice(1)}Controller.${actionName}`
+  ];
+  
+  for (const key of possibleKeys) {
+    const result = actionParameterRegistry.get(key);
+    if (result) {
+      return result;
+    }
+  }
+  
+  return undefined;
 }
 
 /**
