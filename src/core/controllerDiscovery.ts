@@ -7,7 +7,7 @@ import { Controller } from './controller';
 import { ControllerManager } from './controllerManager';
 
 // Global registry to store controllers before ControllerDiscovery is ready
-const globalControllerRegistry: Array<typeof Controller> = [];
+const globalControllerRegistry: Array<any> = [];
 
 export class ControllerDiscovery {
     private static controllers: Map<string, typeof Controller> = new Map();
@@ -33,7 +33,7 @@ export class ControllerDiscovery {
     /**
      * Register a controller class for discovery
      */
-    static registerController(controllerClass: typeof Controller): void {
+    static registerController(controllerClass: any): void {
         const name = controllerClass.name;
         const controllerName = name.endsWith('Controller') 
             ? name.slice(0, -10) // Remove 'Controller' suffix
@@ -73,7 +73,7 @@ export class ControllerDiscovery {
 /**
  * Add controller to global registry (used before ControllerDiscovery is ready)
  */
-function addToGlobalRegistry(controllerClass: typeof Controller): void {
+function addToGlobalRegistry(controllerClass: any): void {
     const name = controllerClass.name;
     console.log(`📋 Pre-registering controller: ${name} (global registry now has ${globalControllerRegistry.length + 1} controllers)`);
     globalControllerRegistry.push(controllerClass);
@@ -83,7 +83,7 @@ function addToGlobalRegistry(controllerClass: typeof Controller): void {
  * Controller decorator for automatic registration
  * Use this decorator on controller classes to auto-register them
  */
-export function AutoRegister<T extends typeof Controller>(target: T): T {
+export function AutoRegister<T extends new (...args: any[]) => Controller>(target: T): T {
     
     // Add to global registry if ControllerDiscovery isn't ready yet
     // This avoids circular dependency issues during module loading
