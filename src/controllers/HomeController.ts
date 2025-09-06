@@ -1,5 +1,5 @@
 import { Controller } from '../core/controller';
-import { controller, action, route } from '../core/decorators';
+import { controller, action } from '../core/decorators';
 import { Injectable } from '../core/diDecorators';
 import { AutoRegister } from '../core/controllerDiscovery';
 import { UserService, LoggerService, EmailService } from '../services/exampleServices';
@@ -18,7 +18,6 @@ export class HomeController extends Controller {
     this.logger.log('HomeController created with constructor injection');
   }
   @action()    // Maps to /home (controller base route)
-  @route('')   // Maps to / (root route) - backward compatibility
   async execute(): Promise<void> {
     this.logger.log('Home page accessed');
     

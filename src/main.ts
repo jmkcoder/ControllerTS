@@ -45,6 +45,9 @@ async function initializeApplication() {
 
     const router = new Router();
 
+    // Configure default route (instead of using @route('') attribute)
+    router.setDefaultRoute('home', 'execute');
+
     // Set router instance for controller redirects
     Controller.setRouter(router);
 

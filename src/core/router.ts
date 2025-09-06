@@ -2,12 +2,32 @@ import type { Controller } from './controller';
 import { getRegisteredRoutes } from './decorators';
 import type { RequestContext } from './requestPipeline';
 
+export interface DefaultRouteConfig {
+  controller: string;
+  action: string;
+}
+
 export class Router {
   private routes: Record<string, any> = {};
   private registeredControllers: Map<string, typeof Controller> = new Map();
   private currentQueryParams: URLSearchParams = new URLSearchParams();
   private currentRequestContext: RequestContext | null = null;
   private pipelineHandler: ((url: string, method: string) => Promise<void>) | null = null;
+  private defaultRoute: DefaultRouteConfig | null = null;
+
+  /**
+   * Set the default route that will be used for the root path "/"
+   */
+  setDefaultRoute(controller: string, action: string) {
+    this.defaultRoute = { controller: controller.toLowerCase(), action };
+  }
+
+  /**
+   * Get the current default route configuration
+   */
+  getDefaultRoute(): DefaultRouteConfig | null {
+    return this.defaultRoute;
+  }
 
   /**
    * Set pipeline handler (called by request pipeline during setup)
@@ -56,10 +76,26 @@ export class Router {
   }
 
   /**
+   * Get clean path and handle default route resolution
+   */
+  private getCleanPath(path: string): string {
+    const cleaned = path.replace(/^\//, '');
+    
+    // If it's root path and we have a default route configured
+    if (!cleaned && this.defaultRoute) {
+      return `${this.defaultRoute.controller}/${this.defaultRoute.action}`;
+    }
+    
+    // If it's root path and no default route, fallback to 'home'
+    return cleaned || 'home';
+  }
+
+  /**
    * Route a specific path (used by request pipeline)
    */
   async routePath(path: string): Promise<void> {
-    const cleanPath = path.replace(/^\//, '') || 'home';
+    // Handle root path with default route
+    const cleanPath = this.getCleanPath(path);
     
     // Parse query parameters from current request context or URL
     if (this.currentRequestContext) {
@@ -96,7 +132,8 @@ export class Router {
   }
 
   private async route() {
-    const path = window.location.pathname.replace(/^\//, '') || 'home';
+    // Handle root path with default route
+    const path = this.getCleanPath(window.location.pathname);
     
     // Parse query parameters
     this.currentQueryParams = new URLSearchParams(window.location.search);
