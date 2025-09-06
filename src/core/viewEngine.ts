@@ -119,22 +119,20 @@ export class ViewEngine {
    * Renders a full view and replaces the entire document content (like MVC View())
    */
   static async View(viewPath: string, context: Record<string, any> = {}): Promise<void> {
+    console.log('🎨 ViewEngine: Rendering view:', viewPath, 'with context:', context);
     const html = await this.renderTemplate(viewPath, context);
+    console.log('🎨 ViewEngine: Template rendered, updating DOM...');
     
-    // Check if the template contains a full HTML document
-    if (html.includes('<!DOCTYPE html>') || html.includes('<html')) {
-      // Replace the entire document
-      document.open();
-      document.write(html);
-      document.close();
-    } else {
-      // Just replace the body content for partial templates
-      document.body.innerHTML = html;
-    }
+    // Always just replace the body content to preserve event listeners
+    // document.open() and document.write() can break event listeners
+    console.log('🎨 ViewEngine: Replacing body content (preserving event listeners)');
+    document.body.innerHTML = html;
     
+    console.log('🎨 ViewEngine: DOM updated, reinitializing HtmlHelper...');
     // IMPORTANT: Reinitialize HtmlHelper after DOM content changes
     // This ensures MVC attributes work on the new content
     HtmlHelper.reinitialize();
+    console.log('✅ ViewEngine: View rendering complete');
   }
 
   /**

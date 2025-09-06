@@ -71,21 +71,36 @@ export class RequestPipeline {
     }
 
     private async processMiddlewares(context: RequestContext, index: number): Promise<void> {
+        console.log(`🔗 RequestPipeline: processMiddlewares called with index ${index}/${this.middlewares.length}`);
+        
         if (index >= this.middlewares.length) {
             // End of middleware chain, execute the router
+            console.log('🔗 RequestPipeline: End of middleware chain, executing route...');
             return this.executeRoute(context);
         }
 
         const middleware = this.middlewares[index];
-        await middleware.handle(context, () => this.processMiddlewares(context, index + 1));
+        console.log(`🔗 RequestPipeline: Processing middleware ${index}: ${middleware.constructor.name}`);
+        
+        await middleware.handle(context, () => {
+            console.log(`🔗 RequestPipeline: Middleware ${index} (${middleware.constructor.name}) called next()`);
+            return this.processMiddlewares(context, index + 1);
+        });
+        
+        console.log(`🔗 RequestPipeline: Middleware ${index} (${middleware.constructor.name}) completed`);
     }
 
     private async executeRoute(context: RequestContext): Promise<void> {
+        console.log('🔗 RequestPipeline: executeRoute called with context:', context.path);
+        
         // Set the current request context in the router
         this.router.setRequestContext(context);
+        console.log('🔗 RequestPipeline: Request context set in router');
         
         // Route the request
+        console.log('🔗 RequestPipeline: Calling router.routePath...');
         await this.router.routePath(context.path);
+        console.log('🔗 RequestPipeline: router.routePath completed');
     }
 }
 

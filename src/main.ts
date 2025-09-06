@@ -73,7 +73,6 @@ async function initializeApplication() {
         .use(new PerformanceMiddleware())       // 4. Performance monitoring (wraps request)
         .use(new AuthenticationMiddleware())    // 5. Authentication check
         .use(new ValidationMiddleware())        // 6. Request validation
-        .use(new CachingMiddleware())           // 7. Response caching
         .use(new LoggingMiddleware())           // 8. Log requests
         .use(new DIScopeMiddleware())           // 9. Setup DI scoping
         .use(new RequestContextMiddleware());   // 10. Add request context to DI
