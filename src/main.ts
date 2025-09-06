@@ -11,6 +11,7 @@ import { App } from './core/app';
 import { LoggingMiddleware, ErrorHandlingMiddleware, DIScopeMiddleware, RequestContextMiddleware } from './core/requestPipeline';
 import { AuthenticationMiddleware, PerformanceMiddleware, CorsMiddleware, ValidationMiddleware, CachingMiddleware, SecurityMiddleware } from './core/customMiddleware';
 import { AutoControllerLoader } from './core/autoControllerLoader';
+import { processControllerRoutes } from './core/decorators';
 import './style.css';
 
 async function initializeApplication() {
@@ -31,6 +32,10 @@ async function initializeApplication() {
     // Controllers are now auto-loaded after service registration
     // Initialize ControllerDiscovery and register all controllers
     ControllerDiscovery.registerAllControllers();
+    
+    // Process controller routes from @controller/@action decorators
+    console.log('🛣️  Processing controller routes...');
+    processControllerRoutes();
 
     // Initialize HtmlHelper for MVC attributes immediately
     HtmlHelper.initializeMvcAttributes();

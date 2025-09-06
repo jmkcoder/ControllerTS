@@ -1,5 +1,5 @@
 import { Controller } from '../core/controller';
-import { route } from '../core/decorators';
+import { controller, action } from '../core/decorators';
 import { Injectable } from '../core/diDecorators';
 import { AutoRegister } from '../core/controllerDiscovery';
 import { ProductService } from '../services/productService';
@@ -7,6 +7,7 @@ import { LoggerService } from '../services/exampleServices';
 
 @AutoRegister
 @Injectable
+@controller('products')
 export class ProductController extends Controller {
 
   constructor(private productService: ProductService, private logger: LoggerService) {
@@ -14,7 +15,7 @@ export class ProductController extends Controller {
     this.logger.log('ProductController created with injected dependencies');
   }
   
-  @route('products')
+  @action()  // Maps to /products
   async list(queryParams?: Record<string, string>): Promise<void> {
     // Extract query parameters with validation
     const category = this.getQueryParam('category') || 'all';
@@ -85,7 +86,7 @@ export class ProductController extends Controller {
     });
   }
   
-  @route('products/filter')
+  @action('filter')  // Maps to /products/filter
   async filter(): Promise<any> {
     // This action handles filter form submissions and redirects back to the list
     const category = this.getQueryParam('category') || 'all';
@@ -116,13 +117,13 @@ export class ProductController extends Controller {
     return this.Redirect(redirectUrl);
   }
   
-  @route('products/clear-filters')
+  @action('clear-filters')  // Maps to /products/clear-filters
   async clearFilters(): Promise<any> {
     // Redirect to products list with no filters
     return this.Redirect('/products');
   }
   
-  @route('products/quick-filter')
+  @action('quick-filter')  // Maps to /products/quick-filter
   async quickFilter(): Promise<any> {
     // Quick filter examples
     const filterType = this.getQueryParam('type');

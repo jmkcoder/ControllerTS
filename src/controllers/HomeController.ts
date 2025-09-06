@@ -1,11 +1,12 @@
 import { Controller } from '../core/controller';
-import { route } from '../core/decorators';
+import { controller, action, route } from '../core/decorators';
 import { Injectable } from '../core/diDecorators';
 import { AutoRegister } from '../core/controllerDiscovery';
 import { UserService, LoggerService, EmailService } from '../services/exampleServices';
 
 @AutoRegister
 @Injectable
+@controller('home')
 export class HomeController extends Controller {
   
   constructor(
@@ -16,8 +17,8 @@ export class HomeController extends Controller {
     super();
     this.logger.log('HomeController created with constructor injection');
   }
-  @route('home')
-  @route('')  // Root route
+  @action()    // Maps to /home (controller base route)
+  @route('')   // Maps to / (root route) - backward compatibility
   async execute(): Promise<void> {
     this.logger.log('Home page accessed');
     
@@ -40,13 +41,13 @@ export class HomeController extends Controller {
    });
   }
 
-  @route('home/index')
+  @action('index')
   async index(): Promise<void> {
     await this.execute();
   }
 
   // Demo method that can be called from the template
-  @route('home/demo')
+  @action('demo')
   async demoAction(data?: any): Promise<void> {
     this.logger.log(`Demo action called with data: ${JSON.stringify(data)}`);
     
@@ -78,7 +79,7 @@ export class HomeController extends Controller {
   }
 
   // Another demo method for form submission
-  @route('home/submit')
+  @action('submit')
   async submitForm(formData: any): Promise<any> {
     return {
       success: true,
@@ -88,28 +89,28 @@ export class HomeController extends Controller {
   }
 
   // Demo redirect methods
-  @route('home/redirect-home')
+  @action('redirect-home')
   async redirectToHome(): Promise<any> {
     return this.Redirect('/');  // Use clean URL format
   }
 
-  @route('home/redirect-about')
+  @action('redirect-about')
   async redirectToAbout(): Promise<any> {
     return this.Redirect('/about');  // Use clean URL format
   }
 
-  @route('home/redirect-google')
+  @action('redirect-google')
   async redirectToGoogle(): Promise<any> {
     return this.RedirectToUrl('https://www.google.com');
   }
 
-  @route('home/redirect-action')
+  @action('redirect-action')
   async redirectToAction(): Promise<any> {
     return this.RedirectToAction('demoAction');  // Use actual method name
   }
 
   // Demo method that returns JSON with DI data
-  @route('home/json')
+  @action('json')
   async getJsonData(): Promise<any> {
     this.logger.log('JSON API endpoint called');
     
@@ -130,7 +131,7 @@ export class HomeController extends Controller {
   }
 
   // Demo method that conditionally redirects
-  @route('home/process')
+  @action('process')
   async processAndRedirect(data: any): Promise<any> {
     // Simulate some processing logic
     if (data && data.redirect === 'true') {
@@ -147,7 +148,7 @@ export class HomeController extends Controller {
   }
 
   // New method to demonstrate query parameter handling
-  @route('home/search')
+  @action('search')
   async search(queryParams?: Record<string, string>): Promise<void> {
     // Get query parameters using the new methods
     const query = this.getQueryParam('q') || this.getQueryParam('query') || '';
@@ -205,7 +206,7 @@ export class HomeController extends Controller {
   }
 
   // Method to demonstrate redirect with query parameters
-  @route('home/redirect-with-params')
+  @action('redirect-with-params')
   async redirectWithParams(): Promise<any> {
     // Redirect to search with query parameters
     return this.Redirect('/home/search', {
@@ -216,7 +217,7 @@ export class HomeController extends Controller {
   }
 
   // Method to demonstrate building URLs with query parameters
-  @route('home/url-builder')
+  @action('url-builder')
   async urlBuilder(): Promise<void> {
     const searchUrl = this.buildUrl('/home/search', {
       q: 'example',
@@ -241,7 +242,7 @@ export class HomeController extends Controller {
   }
 
   // Method to demonstrate partial views with Nunjucks
-  @route('home/partials-demo')
+  @action('partials-demo')
   async partialsDemo(): Promise<void> {
     this.logger.log('Partials demo page accessed');
     
@@ -267,7 +268,7 @@ export class HomeController extends Controller {
   }
 
   // Method to demonstrate advanced Nunjucks features
-  @route('home/advanced-demo')
+  @action('advanced-demo')
   async advancedDemo(): Promise<void> {
     this.logger.log('Advanced Nunjucks demo page accessed');
     

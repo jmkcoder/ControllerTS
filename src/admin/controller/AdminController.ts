@@ -1,15 +1,16 @@
 import { Controller } from '../../core/controller';
 import { AutoRegister } from '../../core/controllerDiscovery';
-import { route } from '../../core/decorators';
+import { controller, action } from '../../core/decorators';
 
 /**
  * Admin Dashboard Controller
  * Demonstrates clean architecture with domain-based organization
  */
 @AutoRegister
+@controller('admin')
 export class AdminController extends Controller {
     
-    @route('/admin')
+    @action()  // Maps to /admin (base route + empty action)
     async dashboard() {
         console.log('🔧 AdminController: Displaying admin dashboard');
         return await this.View('admin-dashboard', {
@@ -22,7 +23,7 @@ export class AdminController extends Controller {
         });
     }
     
-    @route('/admin/users')
+    @action('users')  // Maps to /admin/users
     async manageUsers() {
         console.log('👥 AdminController: Managing users');
         return await this.View('admin-users', {
@@ -36,7 +37,7 @@ export class AdminController extends Controller {
         });
     }
     
-    @route('/admin/settings')
+    @action('settings')  // Maps to /admin/settings
     async settings() {
         console.log('⚙️ AdminController: System settings');
         return await this.View('admin-settings', {
