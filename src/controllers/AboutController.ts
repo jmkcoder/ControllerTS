@@ -4,6 +4,7 @@ import { AutoRegister } from '../core/controllerDiscovery';
 
 @AutoRegister
 export class AboutController extends Controller {
+
   @route('about')
   @route('about/index')
   async execute(): Promise<void> {

@@ -10,72 +10,80 @@ import { ProductService } from './services/productService';
 import { App } from './core/app';
 import { LoggingMiddleware, ErrorHandlingMiddleware, DIScopeMiddleware, RequestContextMiddleware } from './core/requestPipeline';
 import { AuthenticationMiddleware, PerformanceMiddleware, CorsMiddleware, ValidationMiddleware, CachingMiddleware, SecurityMiddleware } from './core/customMiddleware';
+import { AutoControllerLoader } from './core/autoControllerLoader';
 import './style.css';
 
-// IMPORTANT: Register services using proper DI registration (no more factories needed!)
-// Register singleton services (shared across the entire application)
-serviceContainer.addSingleton(LoggerService);
-serviceContainer.addSingleton(ViewEngine);
+async function initializeApplication() {
+    // IMPORTANT: Register services using proper DI registration (no more factories needed!)
+    // Register singleton services (shared across the entire application)
+    serviceContainer.addSingleton(LoggerService);
+    serviceContainer.addSingleton(ViewEngine);
 
-// Register scoped services (one instance per request)
-serviceContainer.addScoped(UserService);
-serviceContainer.addScoped(ProductService);
+    // Register scoped services (one instance per request)
+    serviceContainer.addScoped(UserService);
+    serviceContainer.addScoped(ProductService);
 
-// Register transient services (new instance every time)
-serviceContainer.addTransient(EmailService);
+    // Register transient services (new instance every time)
+    serviceContainer.addTransient(EmailService);
 
-// NOW import controllers to trigger @AutoRegister decorators
-// This ensures services are available when controllers are constructed
-import './controllers/HomeController';
-import './controllers/AboutController';
-import './controllers/ProductController';
+    // AUTO-LOAD controllers based on inheritance - NO MORE MANUAL IMPORTS! 🎉
+    console.log('🚀 Starting automatic controller discovery...');
+    await AutoControllerLoader.loadAllControllers();
 
-// Controllers are now imported after service registration
-// Initialize ControllerDiscovery and register all controllers
-ControllerDiscovery.registerAllControllers();
+    // Controllers are now auto-loaded after service registration
+    // Initialize ControllerDiscovery and register all controllers
+    ControllerDiscovery.registerAllControllers();
 
-// Initialize HtmlHelper for MVC attributes immediately
-HtmlHelper.initializeMvcAttributes();
+    // Initialize HtmlHelper for MVC attributes immediately
+    HtmlHelper.initializeMvcAttributes();
 
-// Also make it available globally for template access
-(window as any).Html = HtmlHelper;
+    // Also make it available globally for template access
+    (window as any).Html = HtmlHelper;
 
-const router = new Router();
+    const router = new Router();
 
-// Set router instance for controller redirects
-Controller.setRouter(router);
+    // Set router instance for controller redirects
+    Controller.setRouter(router);
 
-// Register discovered controllers with the router as well
-const discoveredControllers = ControllerDiscovery.getControllers();
-for (const [name, controllerClass] of discoveredControllers) {
-    // Register with router if it has these methods
-    if (router.registerController) {
-        router.registerController(name, controllerClass);
+    // Register discovered controllers with the router as well
+    const discoveredControllers = ControllerDiscovery.getControllers();
+    for (const [name, controllerClass] of discoveredControllers) {
+        // Register with router if it has these methods
+        if (router.registerController) {
+            router.registerController(name, controllerClass);
+        }
+        if (router.addRoute) {
+            router.addRoute(name.toLowerCase(), controllerClass);
+        }
     }
-    if (router.addRoute) {
-        router.addRoute(name.toLowerCase(), controllerClass);
-    }
+
+    // Create the application
+    const app = new App(serviceContainer, router);
+
+    // Configure middleware using the clean API (order matters!)
+    app
+        .use(new ErrorHandlingMiddleware())      // 1. Handle errors first
+        .use(new CorsMiddleware())              // 2. CORS headers  
+        .use(new SecurityMiddleware())          // 3. Security headers
+        .use(new PerformanceMiddleware())       // 4. Performance monitoring (wraps request)
+        .use(new AuthenticationMiddleware())    // 5. Authentication check
+        .use(new ValidationMiddleware())        // 6. Request validation
+        .use(new CachingMiddleware())           // 7. Response caching
+        .use(new LoggingMiddleware())           // 8. Log requests
+        .use(new DIScopeMiddleware())           // 9. Setup DI scoping
+        .use(new RequestContextMiddleware());   // 10. Add request context to DI
+
+    // Start the application
+    app.start();
+
+    // Make services available globally for debugging
+    (window as any).serviceContainer = serviceContainer;
+    (window as any).app = app;
+    
+    console.log('🎉 Application initialized with auto-discovered controllers!');
 }
 
-// Create the application
-const app = new App(serviceContainer, router);
-
-// Configure middleware using the clean API (order matters!)
-app
-    .use(new ErrorHandlingMiddleware())      // 1. Handle errors first
-    .use(new CorsMiddleware())              // 2. CORS headers  
-    .use(new SecurityMiddleware())          // 3. Security headers
-    .use(new PerformanceMiddleware())       // 4. Performance monitoring (wraps request)
-    .use(new AuthenticationMiddleware())    // 5. Authentication check
-    .use(new ValidationMiddleware())        // 6. Request validation
-    .use(new CachingMiddleware())           // 7. Response caching
-    .use(new LoggingMiddleware())           // 8. Log requests
-    .use(new DIScopeMiddleware())           // 9. Setup DI scoping
-    .use(new RequestContextMiddleware());   // 10. Add request context to DI
-
-// Start the application
-app.start();
-
-// Make services available globally for debugging
-(window as any).serviceContainer = serviceContainer;
-(window as any).app = app;
+// Initialize the application
+initializeApplication().catch(error => {
+    console.error('❌ Failed to initialize application:', error);
+});
