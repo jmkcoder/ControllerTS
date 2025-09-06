@@ -112,6 +112,13 @@ export class HtmlHelper {
       // For object actions, return the processed result directly
       const isObjectOnly = isObjectAction(controllerName, actionName);
       if (isObjectOnly) {
+        // If the controller already returned a success/failure structure, use it as-is
+        if (validation.processedResult && typeof validation.processedResult === 'object' && 
+            'success' in validation.processedResult) {
+          return validation.processedResult;
+        }
+        
+        // Otherwise, wrap in success structure (legacy behavior)
         return { 
           success: true, 
           data: validation.processedResult 

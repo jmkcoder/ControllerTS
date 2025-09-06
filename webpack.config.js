@@ -145,6 +145,16 @@ module.exports = (env, argv) => {
           publicPath: '/'
         }
       ],
+      watchFiles: {
+        paths: ['src/**/*'],
+        options: {
+          ignored: [
+            '**/node_modules/**',
+            '**/dist/**',
+            '**/src/core/generated-controllers.ts' // Ignore auto-generated file
+          ]
+        }
+      },
       setupMiddlewares: (middlewares, devServer) => {
         // Serve .njk template files
         devServer.app.get('/src/**/*.njk', (req, res) => {

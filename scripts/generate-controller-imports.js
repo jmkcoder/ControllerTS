@@ -51,11 +51,21 @@ ${moduleMap}
 export const getControllerCount = () => ${imports.length};
 `;
 
-      // Write the generated file
+      // Write the generated file only if content has changed
       const outputPath = path.join(srcPath, 'core', 'generated-controllers.ts');
-      fs.writeFileSync(outputPath, generatedContent);
       
-      console.log(`✅ Generated ${imports.length} controller imports in generated-controllers.ts`);
+      // Check if file exists and compare content
+      let shouldWrite = true;
+      if (fs.existsSync(outputPath)) {
+        const existingContent = fs.readFileSync(outputPath, 'utf8');
+        shouldWrite = existingContent !== generatedContent;
+      }
+      
+      if (shouldWrite) {
+        fs.writeFileSync(outputPath, generatedContent);
+        console.log(`✅ Generated ${imports.length} controller imports in generated-controllers.ts`);
+      }
+      
       callback();
     });
   }

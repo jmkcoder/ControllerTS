@@ -469,7 +469,6 @@ export class HomeController extends Controller {
   @objectAction('registerUser', 'POST')
   async registerUser(userModel: UserRegistrationModel): Promise<any> {
     if (!this.ModelState.IsValid) {
-      
       return {
         success: false,
         message: 'Registration validation failed',

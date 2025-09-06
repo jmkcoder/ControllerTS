@@ -156,22 +156,32 @@ export function bindActionParameters(controllerName: string, actionName: string,
  * Check if a type is a model class (has validation decorators)
  */
 function isModelClass(type: any): boolean {
+  console.log('🔍 [DEV] isModelClass check:', { type, typeName: type?.name, typeOf: typeof type });
+  
   if (!type || typeof type !== 'function') {
+    console.log('🔍 [DEV] Not a function, returning false');
     return false;
   }
   
   try {
     // Check by name convention (classes ending with 'Model')
     if (type.name && type.name.endsWith('Model')) {
+      console.log('🔍 [DEV] Name ends with Model, returning true');
       return true;
     }
+    
+    console.log('🔍 [DEV] Name does not end with Model, checking for validation metadata...');
     
     // Create a temporary instance to check for validation metadata
     const instance = new type();
     const prototype = Object.getPrototypeOf(instance);
     
+    console.log('🔍 [DEV] Created instance:', instance);
+    console.log('🔍 [DEV] Prototype:', prototype);
+    
     // Look for validation metadata using reflection
     const metadataKeys = (Reflect as any).getMetadataKeys?.(prototype) || [];
+    console.log('🔍 [DEV] Metadata keys:', metadataKeys);
     
     // Check for the validation metadata symbol or string-based keys
     const hasValidationMetadata = metadataKeys.some((key: string | symbol) => {
@@ -180,8 +190,10 @@ function isModelClass(type: any): boolean {
       }
       return key.includes('validation');
     });
+    console.log('🔍 [DEV] Has validation metadata:', hasValidationMetadata);
     
     if (hasValidationMetadata) {
+      console.log('🔍 [DEV] Found validation metadata, returning true');
       return true;
     }
     
@@ -227,6 +239,8 @@ export async function callActionWithBinding(
   explicitControllerName?: string
 ): Promise<any> {
   const controllerName = explicitControllerName || controller.constructor.name;
+  console.log('🔍 [DEV] callActionWithBinding called:', { controllerName, actionName, hasFormData: !!formData });
+  
   const action = controller[actionName];
   
   if (typeof action !== 'function') {
@@ -235,11 +249,14 @@ export async function callActionWithBinding(
   
   // Get parameter binding metadata
   const boundParameters = bindActionParameters(controllerName, actionName, formData);
+  console.log('🔍 [DEV] Bound parameters result:', boundParameters);
   
   // Check for auto-validated models and update controller's ModelState
   for (const param of boundParameters) {
+    console.log('🔍 [DEV] Checking parameter for auto-validation:', param);
     if (param && typeof param === 'object' && param.__autoValidated) {
       const validationResult = param.__validationResult;
+      console.log('🔍 [DEV] Found auto-validated model, updating ModelState with:', validationResult);
       controller.modelState.updateFromValidationResult(validationResult);
       
       // Clean up temporary properties
