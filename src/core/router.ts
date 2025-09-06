@@ -3,6 +3,7 @@ import { getRegisteredRoutes } from './decorators';
 import type { RequestContext } from './requestPipeline';
 import { ActionValidator } from './actionValidator';
 import { HtmlHelper } from './htmlHelper';
+import { ErrorHandler } from './errorHandler';
 
 export interface DefaultRouteConfig {
   controller: string;
@@ -147,8 +148,9 @@ export class Router {
       try {
         await this.pipelineHandler(url, 'GET');
       } catch (error) {
-        // Fallback to direct routing
-        await this.route();
+        console.error('Pipeline error:', error);
+        // Handle 500 error through error handler
+        await this.handle500(error instanceof Error ? error : new Error('Unknown pipeline error'));
       }
     } else {
       // Fallback to direct routing if pipeline not set up yet
@@ -198,7 +200,7 @@ export class Router {
           routeInfo.actionType
         );
       } else {
-        this.handle404();
+        await this.handle404();
       }
       return;
     }
@@ -255,7 +257,7 @@ export class Router {
     }
 
     // 404 - No route found
-    this.handle404();
+    await this.handle404();
   }
 
   /**
@@ -381,10 +383,21 @@ export class Router {
     }
   }
 
-  private handle404() {
-    document.body.innerHTML = '<h1>404 - Not Found</h1>';
-    
-    // Reinitialize HtmlHelper after DOM content change
-    HtmlHelper.reinitialize();
+  private async handle404() {
+    await ErrorHandler.handle404(undefined, this.currentRequestContext);
+  }
+
+  /**
+   * Handle 500 errors
+   */
+  async handle500(error: Error) {
+    await ErrorHandler.handle500(error, this.currentRequestContext);
+  }
+
+  /**
+   * Handle other HTTP errors
+   */
+  async handleError(statusCode: number, message?: string, details?: any) {
+    await ErrorHandler.handleError(statusCode, message, details, this.currentRequestContext);
   }
 }

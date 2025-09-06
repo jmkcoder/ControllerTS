@@ -1,0 +1,78 @@
+{% extends "shared/_base.njk" %}
+
+{% block title %}{{ statusCode or "404" }} - Page Not Found{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 50px 20px;">
+  <div style="max-width: 600px; margin: 0 auto;">
+    <h1 style="color: #e74c3c; font-size: 8em; margin: 0; font-weight: 300; line-height: 1;">
+      {{ statusCode or "404" }}
+    </h1>
+    
+    <h2 style="color: #2c3e50; margin: 30px 0 20px; font-size: 2em; font-weight: 300;">
+      {{ message or "Page Not Found" }}
+    </h2>
+    
+    <p style="color: #7f8c8d; font-size: 1.2em; margin: 20px 0 40px; line-height: 1.6;">
+      The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+    </p>
+    
+    <div style="margin: 40px 0;">
+      <a href="/" style="
+        display: inline-block;
+        padding: 12px 30px;
+        background: #3498db;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1.1em;
+        margin: 10px;
+        transition: background 0.3s ease;
+      " onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">
+        ← Go Home
+      </a>
+      
+      <a href="javascript:history.back()" style="
+        display: inline-block;
+        padding: 12px 30px;
+        background: #95a5a6;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1.1em;
+        margin: 10px;
+        transition: background 0.3s ease;
+      " onmouseover="this.style.background='#7f8c8d'" onmouseout="this.style.background='#95a5a6'">
+        ← Go Back
+      </a>
+    </div>
+    
+    {% if details %}
+    <details style="text-align: left; margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 5px;">
+      <summary style="cursor: pointer; font-weight: bold; color: #2c3e50;">Technical Details</summary>
+      <pre style="margin-top: 10px; color: #6c757d; font-size: 0.9em; white-space: pre-wrap;">{{ details | dump }}</pre>
+    </details>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add some interactivity for better UX
+document.addEventListener('DOMContentLoaded', function() {
+  // Auto-focus on home button for keyboard users
+  const homeButton = document.querySelector('a[href="/"]');
+  if (homeButton) {
+    homeButton.focus();
+  }
+  
+  // Add keyboard shortcut to go home (press H)
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'h' || e.key === 'H') {
+      window.location.href = '/';
+    }
+  });
+});
+</script>
+{% endblock %}

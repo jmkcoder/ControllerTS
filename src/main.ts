@@ -14,6 +14,7 @@ import { AutoControllerLoader } from './core/autoControllerLoader';
 import { processControllerRoutes } from './core/decorators';
 import { registerActionParameters } from './core/parameterBinding';
 import { UserRegistrationModel, ContactFormModel } from './models/sampleModels';
+import { configureErrorPages } from './core/errorConfig';
 import './style.css';
 
 async function initializeApplication() {
@@ -37,6 +38,19 @@ async function initializeApplication() {
     
     // Process controller routes from @controller/@action decorators
     processControllerRoutes();
+
+    // Configure error pages (no need to touch core router!)
+    configureErrorPages({
+        404: {
+            template: 'views/errors/404.njk'
+        },
+        500: {
+            template: 'views/errors/500.njk' 
+        },
+        403: {
+            template: 'views/errors/403.njk'
+        }
+    });
 
     // WORKAROUND: Manually register parameter types since Vite/ESBuild doesn't support reflection metadata
     // Register strongly typed parameters for actions that need automatic model binding

@@ -1,0 +1,73 @@
+{% extends "shared/_base.njk" %}
+
+{% block title %}{{ statusCode or "403" }} - Access Forbidden{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 50px 20px;">
+  <div style="max-width: 600px; margin: 0 auto;">
+    <h1 style="color: #e74c3c; font-size: 8em; margin: 0; font-weight: 300; line-height: 1;">
+      {{ statusCode or "403" }}
+    </h1>
+    
+    <h2 style="color: #2c3e50; margin: 30px 0 20px; font-size: 2em; font-weight: 300;">
+      {{ message or "Access Forbidden" }}
+    </h2>
+    
+    <p style="color: #7f8c8d; font-size: 1.2em; margin: 20px 0 40px; line-height: 1.6;">
+      You don't have permission to access this resource. Please contact the administrator if you believe this is an error.
+    </p>
+    
+    <div style="margin: 40px 0;">
+      <a href="/login" style="
+        display: inline-block;
+        padding: 12px 30px;
+        background: #27ae60;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1.1em;
+        margin: 10px;
+        transition: background 0.3s ease;
+      " onmouseover="this.style.background='#219a52'" onmouseout="this.style.background='#27ae60'">
+        🔑 Login
+      </a>
+      
+      <a href="/" style="
+        display: inline-block;
+        padding: 12px 30px;
+        background: #3498db;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1.1em;
+        margin: 10px;
+        transition: background 0.3s ease;
+      " onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">
+        ← Go Home
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add some interactivity for better UX
+document.addEventListener('DOMContentLoaded', function() {
+  // Auto-focus on login button
+  const loginButton = document.querySelector('a[href="/login"]');
+  if (loginButton) {
+    loginButton.focus();
+  }
+  
+  // Add keyboard shortcut to go to login (press L)
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'l' || e.key === 'L') {
+      window.location.href = '/login';
+    } else if (e.key === 'h' || e.key === 'H') {
+      window.location.href = '/';
+    }
+  });
+});
+</script>
+{% endblock %}
